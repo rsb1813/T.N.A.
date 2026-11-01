@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>T.N.A. — 비행 샌드박스</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b0f14; overflow: hidden; font-family: 'Consolas', 'D2Coding', monospace; }
+      #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+      #hud { position: fixed; left: 12px; top: 10px; color: #b8ffcf; font-size: 13px; line-height: 1.45; text-shadow: 0 0 3px #000, 0 0 6px #000; white-space: pre; pointer-events: none; }
+      #help { position: fixed; right: 12px; bottom: 10px; color: #dfe6ee; font-size: 12px; opacity: 0.75; text-align: right; white-space: pre; pointer-events: none; text-shadow: 0 0 3px #000; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="hud"></div>
+    <div id="help"></div>
+    <script type="module" src="./flight.ts"></script>
+  </body>
+</html>

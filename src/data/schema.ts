@@ -135,6 +135,18 @@ export interface HelmetStats {
   offBoresightDeg: number;
 }
 
+/** 엔진 모듈 1기당 성능. 엔진 모듈에 있으면 AircraftDef.engine 의 수치를 대체한다 */
+export interface EngineStats {
+  /** 1기당 추력 (kN, 해면 정지) */
+  dryThrustKN: number;
+  abThrustKN: number;
+  /** 연료소모율 kg/(kN·h) */
+  tsfcDry: number;
+  tsfcAB: number;
+  /** 아이들→최대 스풀업 시간 (s) */
+  spoolTime: number;
+}
+
 export interface ModuleDef {
   id: string;
   slot: ModuleSlot;
@@ -153,6 +165,8 @@ export interface ModuleDef {
   cms?: CmsStats;
   datalink?: DatalinkStats;
   helmet?: HelmetStats;
+  /** 엔진 모듈: 1기당 성능 (massKg 도 1기당 — 기체 엔진 수만큼 곱한다) */
+  engine?: EngineStats;
   /** 이 모듈이 하드포인트 하나를 차지 (예: Legion IRST 포드 → 'C') */
   occupiesStation?: string;
   /** 모델의 선택 노드 표시/숨김 (예: show: ['opt_cft']) */
@@ -217,6 +231,8 @@ export interface WeaponDef {
     smoke: 'low' | 'medium' | 'high';
     /** 램제트 (Meteor 등): 지속 추력이 길고 고도 영향 큼 */
     ramjet?: boolean;
+    /** 추진제 질량 (kg). 연소에 따라 총중량이 이만큼 줄어든다 (총역적에 비례해 감소) */
+    propellantKg?: number;
   };
   /** 미사일/폭탄 비행체 공력 */
   body?: {
@@ -248,6 +264,8 @@ export interface WeaponDef {
     ccm: number;
     /** 로프트 궤도 사용 */
     loft?: boolean;
+    /** 유도·구동 전원 지속 시간 (s). 발사 후 이 시간이 지나면 자폭/유도 상실. 생략 시 무제한(모델 기본값) */
+    maxTimeSec?: number;
   };
   warhead?: {
     massKg: number;
@@ -367,6 +385,8 @@ export interface AircraftDef {
     yawRateDeg: number;
     /** 코너 속도 (m/s, 참고값) */
     cornerSpeed: number;
+    /** 구조 한계 지시대기속도 (m/s, 예: 800 KCAS ≈ 412). 저고도 최고속도를 제한한다 */
+    maxIas?: number;
   };
   signature: { rcs: number; ir: number };
   gun: { weaponId: string; rounds: number } | null;
@@ -457,6 +477,8 @@ export interface DerivedStats {
   pitchRate: number; // rad/s
   yawRate: number; // rad/s
   cornerSpeed: number;
+  /** 구조 한계 지시대기속도 (m/s). 비행모델은 이를 넘으면 과속 항력/경고를 적용 */
+  maxIas?: number;
   /** 외부 무장 포함 RCS (m²) */
   rcs: number;
   ir: number;
