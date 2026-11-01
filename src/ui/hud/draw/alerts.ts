@@ -22,7 +22,8 @@ export function drawDlz(f: HudFrame): void {
   if (!zone || !(zone.rMax > 0)) return;
   const { ctx, s, cx, cy, units } = f;
   computeDlz(zone, metersPerDistanceUnit(units), _dlz);
-  const x = cx + (TAPE_OFFSET_X + 112) * s;
+  // 고도 상자(오른쪽 끝 = TAPE_OFFSET_X + 92) 와 캐럿 거리 글자가 겹치지 않는 위치
+  const x = cx + (TAPE_OFFSET_X + 142) * s;
   const len = TAPE_HALF_H * 1.7 * s;
   const bottom = cy + len / 2;
   const yOf = (fr: number): number => bottom - fr * len;
@@ -97,32 +98,36 @@ export function drawThreatWarnings(f: HudFrame): void {
   const missile = f.missileThreats > 0 || p.avionics.missileWarning;
   if (missile) {
     const on = blink(time, 3.2, 0.68);
-    const bw = 196 * s;
-    const bh = 38 * s;
-    const by = 92 * s;
+    const bw = 206 * s;
+    const bh = 54 * s;
+    const by = 84 * s;
+    panel(ctx, cx - bw / 2, by, bw, bh, on ? 'rgba(70, 0, 0, 0.62)' : 'rgba(30, 0, 0, 0.45)', null, s);
+    ctx.beginPath();
+    addRect(ctx, cx - bw / 2, by, bw, bh);
+    ctx.strokeStyle = HUD_COLORS.warn;
+    ctx.lineWidth = (on ? 2.4 : 1.2) * s;
+    ctx.stroke();
     if (on) {
-      panel(ctx, cx - bw / 2, by, bw, bh, 'rgba(60, 0, 0, 0.55)', null, s);
-      ctx.beginPath();
-      addRect(ctx, cx - bw / 2, by, bw, bh);
-      ctx.strokeStyle = HUD_COLORS.warn;
-      ctx.lineWidth = 2.2 * s;
-      ctx.stroke();
       ctx.font = monoFont(26 * s, 800);
       ctx.fillStyle = HUD_COLORS.warn;
-      text(ctx, f.missileThreats > 1 ? `MISSILE ×${f.missileThreats}` : 'MISSILE', cx, by + bh / 2 + 1 * s, 'center');
+      text(ctx, f.missileThreats > 1 ? `MISSILE ×${f.missileThreats}` : 'MISSILE', cx, by + 20 * s, 'center');
     }
-    ctx.font = sansFont(12 * s, 700);
-    ctx.fillStyle = HUD_COLORS.warn;
-    text(ctx, '미사일 접근 — 회피하라', cx, by + bh + 12 * s, 'center');
+    ctx.font = sansFont(12.5 * s, 700);
+    ctx.fillStyle = '#ffd0d0';
+    text(ctx, '미사일 접근 — 회피하라', cx, by + 42 * s, 'center');
   } else if (f.lockThreats > 0) {
+    const bw = 150 * s;
+    const bh = 42 * s;
+    const by = 88 * s;
+    panel(ctx, cx - bw / 2, by, bw, bh, 'rgba(40, 24, 0, 0.5)', null, s);
     if (blink(time, 1.6, 0.7)) {
       ctx.font = monoFont(18 * s, 800);
       ctx.fillStyle = HUD_COLORS.caution;
-      text(ctx, 'WARNING', cx, 108 * s, 'center');
+      text(ctx, 'WARNING', cx, by + 15 * s, 'center');
     }
-    ctx.font = sansFont(11 * s, 600);
-    ctx.fillStyle = HUD_COLORS.caution;
-    text(ctx, '적 레이더 락온', cx, 126 * s, 'center');
+    ctx.font = sansFont(12 * s, 700);
+    ctx.fillStyle = '#ffe2b0';
+    text(ctx, '적 레이더 락온', cx, by + 32 * s, 'center');
   }
 
   if (!f.sim.settings.assists.threatArrows) return;
@@ -173,7 +178,7 @@ interface WarnLine {
 const _lines: WarnLine[] = [];
 for (let i = 0; i < 6; i++) _lines.push({ text: '', sub: '', color: '', big: false });
 
-/** STALL / OVER-G / PULL UP / BINGO FUEL / 작전 구역 이탈 — 중앙 아래 */
+/** STALL / OVER-G / PULL UP / BINGO FUEL / 작전 구역 이탈 — 보어사이트 위쪽 (추적 시점에서 기체에 가리지 않게) */
 export function drawFlightWarnings(f: HudFrame): void {
   const w = f.warnings;
   let n = 0;
@@ -192,28 +197,30 @@ export function drawFlightWarnings(f: HudFrame): void {
   if (w.bingo) add('BINGO FUEL', '연료 부족', HUD_COLORS.caution, false);
   if (n === 0) return;
   const { ctx, s, cx, cy, time } = f;
-  let y = cy + 84 * s;
+  let y = cy - 52 * s;
   const on = blink(time, 2.4, 0.7);
   for (let i = 0; i < n && i < 3; i++) {
     const l = _lines[i];
     const size = l.big ? 22 : 16;
+    const ty = y - (size / 2 + 8) * s;
     if (on || l.color !== HUD_COLORS.warn) {
       ctx.font = l.text.charCodeAt(0) > 0x3000 ? sansFont(size * s, 800) : monoFont(size * s, 800);
       ctx.fillStyle = l.color;
-      text(ctx, l.text, cx, y, 'center');
+      text(ctx, l.text, cx, ty, 'center');
     }
-    ctx.font = l.sub.charCodeAt(0) > 0x3000 ? sansFont(10 * s, 600) : monoFont(10 * s, 600);
+    ctx.font = l.sub.charCodeAt(0) > 0x3000 ? sansFont(11 * s, 700) : monoFont(10 * s, 700);
     ctx.fillStyle = l.color;
-    text(ctx, l.sub, cx, y + (size / 2 + 7) * s, 'center');
-    y += (size + 18) * s;
+    text(ctx, l.sub, cx, y, 'center');
+    y -= (size + 20) * s;
   }
 }
 
-/** HIT / MISSED / 격파 DESTROYED — 보어사이트 위쪽 */
+/** HIT / MISSED / 격파 DESTROYED — 보어사이트 오른쪽 위, 최신이 아래 */
 export function drawEventFeed(f: HudFrame, feed: EventFeed): void {
   if (!feed.items.length) return;
   const { ctx, s, cx, cy, time } = f;
-  let y = cy - 72 * s;
+  const x0 = cx + 58 * s;
+  let y = cy - 34 * s;
   for (let i = 0; i < feed.items.length && i < 3; i++) {
     const it = feed.items[i];
     const age = time - it.time;
@@ -222,21 +229,22 @@ export function drawEventFeed(f: HudFrame, feed: EventFeed): void {
     ctx.globalAlpha = a * (i === 0 ? 1 : 0.7);
     const pop = i === 0 && age < 0.2 ? 1 + (0.2 - age) * 1.2 : 1;
     if (it.kind === 'kill') {
-      ctx.font = sansFont(19 * s * pop, 800);
+      const kf = sansFont(19 * s * pop, 800);
+      ctx.font = kf;
       ctx.fillStyle = HUD_COLORS.hostile;
-      text(ctx, '격파', cx - 4 * s, y, 'right');
+      text(ctx, '격파', x0, y, 'left');
       ctx.font = monoFont(19 * s * pop, 800);
-      text(ctx, 'DESTROYED', cx + 4 * s, y, 'left');
+      text(ctx, 'DESTROYED', x0 + f.metrics.width(ctx, kf, '격파') + 7 * s, y, 'left');
       if (it.sub) {
         ctx.font = sansFont(11 * s, 600);
         ctx.fillStyle = HUD_COLORS.text;
-        text(ctx, it.sub, cx, y + 16 * s, 'center');
+        text(ctx, it.sub, x0, y + 17 * s, 'left');
       }
-      y -= 40 * s;
+      y -= 44 * s;
     } else {
       ctx.font = monoFont(17 * s * pop, 800);
       ctx.fillStyle = it.kind === 'hit' ? HUD_COLORS.target : HUD_COLORS.neutral;
-      text(ctx, it.count > 1 && it.kind === 'hit' ? `${it.text} ×${it.count}` : it.text, cx, y, 'center');
+      text(ctx, it.count > 1 && it.kind === 'hit' ? `${it.text} ×${it.count}` : it.text, x0, y, 'left');
       y -= 26 * s;
     }
   }

@@ -350,6 +350,8 @@ export class Aircraft extends Entity implements AircraftLike {
     this.wreckPitch = rng.range(-0.15, 0.45);
     this.damageState.onFire = true;
     this.damageState.engine = 1;
+    this.emission = null; // 항전이 더 갱신되지 않으므로 레이더 방사 중단
+    this.avionics.jammerActive = false;
     this.stores.setGunTrigger(false);
     const fx = sim.services.fx;
     this.smokeFx?.stop();

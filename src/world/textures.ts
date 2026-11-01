@@ -15,7 +15,7 @@ function rng(seed: number): () => number {
 function canvas(size: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement('canvas');
   c.width = c.height = size;
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
   if (!ctx) throw new Error('[world] 2D canvas 를 만들 수 없다');
   return [c, ctx];
 }

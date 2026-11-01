@@ -16,6 +16,16 @@ import {
   stepSim,
 } from '../src/combat/avionics/testkit';
 
+/** 이 프로세스의 CPU 시간 (ms). 다른 프로세스 부하에 덜 흔들린다. Node 가 아니면 벽시계 */
+function cpuMs(): number {
+  const proc = (globalThis as { process?: { cpuUsage(): { user: number; system: number } } }).process;
+  if (proc?.cpuUsage) {
+    const u = proc.cpuUsage();
+    return (u.user + u.system) / 1000;
+  }
+  return performance.now();
+}
+
 describe('성능', () => {
   it('항공기 40 + 지상 150 + 미사일 20: 시뮬레이션 1초(60 스텝)의 항전 비용', () => {
     const base = mountainTerrain(
@@ -65,15 +75,17 @@ describe('성능', () => {
     }
     stepSim(sim, 2); // 워밍업
     losCalls = 0;
-    const t0 = performance.now();
+    const w0 = performance.now();
+    const c0 = cpuMs();
     stepSim(sim, 1);
-    const ms = performance.now() - t0;
+    const ms = cpuMs() - c0;
+    const wall = performance.now() - w0;
     const avgTracks = aircraft.reduce((n, a) => n + a.avionics.tracks.length, 0) / aircraft.length;
     // 60 fps 의 1초 = 1000 ms 예산 중 항전 전체가 작은 몫이어야 한다 (CI 여유 포함 상한).
     // 지형 시선 검사는 캐시 덕분에 초당 수천 번 이하
     expect(ms).toBeLessThan(200);
     expect(losCalls).toBeLessThan(2500);
     expect(avgTracks).toBeGreaterThan(3);
-    console.info(`[perf] avionics 40기 + 지상 150 + 미사일 20: ${ms.toFixed(1)} ms / sim-s, LOS ${losCalls}/s, 평균 트랙 ${avgTracks.toFixed(1)}`);
+    console.info(`[perf] avionics 40기 + 지상 150 + 미사일 20: CPU ${ms.toFixed(1)} ms (벽시계 ${wall.toFixed(1)} ms) / sim-s, LOS ${losCalls}/s, 평균 트랙 ${avgTracks.toFixed(1)}`);
   });
 });

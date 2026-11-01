@@ -32,8 +32,8 @@ import {
 import { MARGIN, createRadioLayout, drawDamagePanel, drawMissionPanel, drawRadio, drawWeaponPanel } from './draw/panels';
 import { createMinimapState, drawMinimap, drawRwr, scopeLayout, type MapMarkerLike, type ScopeLayout } from './draw/scopes';
 
-/** 마우스 에임 컨트롤러가 노출하는 조준 방향 (월드, 정규화) — 계약 외 선택 필드 */
-type MouseAimController = AircraftController & { aimDirection?: THREE.Vector3 | null };
+/** 마우스 에임 컨트롤러(flight PlayerController)가 노출하는 조준 방향 (월드, 정규화) — 계약 외 선택 필드 */
+type MouseAimController = AircraftController & { aimDirection?: THREE.Vector3 | null; mouseAimActive?: boolean };
 /** MissionRunner 의 런타임 지도 마커 (선택) */
 type MissionWithMarkers = { markers?: readonly MapMarkerLike[] };
 
@@ -120,7 +120,7 @@ export class Hud implements System {
       width: '100%',
       height: '100%',
       // 밝은 하늘 위 가독성: 얇은 어두운 테두리
-      filter: 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.9))',
+      filter: 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 2.5px rgba(0, 0, 0, 0.45))',
     } satisfies Partial<CSSStyleDeclaration>);
     this.root.append(this.glow, this.canvas);
     container.appendChild(this.root);
@@ -431,8 +431,8 @@ export class Hud implements System {
     drawFlightPathMarker(f);
     drawBoresight(f);
     if (f.sim.settings.controlMode === 'mouseAim') {
-      const dir = (p.controller as MouseAimController | null)?.aimDirection;
-      if (dir) drawMouseAim(f, _fwd.copy(dir));
+      const ctl = p.controller as MouseAimController | null;
+      if (ctl?.aimDirection && ctl.mouseAimActive !== false) drawMouseAim(f, _fwd.copy(ctl.aimDirection));
     }
     drawKillPopups(f, this.feed);
     drawThreatWarnings(f);

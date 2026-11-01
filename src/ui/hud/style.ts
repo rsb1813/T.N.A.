@@ -2,8 +2,8 @@
 
 export const HUD_COLORS = {
   main: '#7dffb0',
-  mainDim: 'rgba(125, 255, 176, 0.55)',
-  mainFaint: 'rgba(125, 255, 176, 0.18)',
+  mainDim: 'rgba(125, 255, 176, 0.78)',
+  mainFaint: 'rgba(125, 255, 176, 0.2)',
   hostile: '#ff5a5a',
   target: '#ffd24a',
   friendly: '#6ecbff',
@@ -11,7 +11,7 @@ export const HUD_COLORS = {
   warn: '#ff3b3b',
   caution: '#ffb03b',
   text: '#eaf6ef',
-  textDim: 'rgba(234, 246, 239, 0.6)',
+  textDim: 'rgba(234, 246, 239, 0.72)',
   /** 패널 배경 — 밝은 하늘 위 가독성 */
   panel: 'rgba(3, 14, 9, 0.46)',
   panelEdge: 'rgba(125, 255, 176, 0.35)',

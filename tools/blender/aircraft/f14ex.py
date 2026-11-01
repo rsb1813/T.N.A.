@@ -93,15 +93,18 @@ ac.seat(4.75, SILL - 0.05)
 ac.seat(3.40, SILL - 0.02)
 
 # ------------------------------------------------------------------ 무장 스테이션
-# 터널 팔레트 (AIM-54 등) — 터널 천장에서 내려온 짧은 받침
-for i, yy in enumerate((2.0, 0.3, -1.4, -3.1), start=1):
-    ac.pylon(0.0, yy - 0.1, -0.88, length=1.3, width=0.16, side="center", rake=0.15, rear_rake=0.15)
-    ac.station(f"TUNNEL_{i}", (0.0, yy, -0.88))
-# 글러브 파일런 + 측면 레일
-ac.pylon(2.60, 0.25, -0.72, length=2.6, width=0.16, rake=0.3)
-ac.rail(2.86, 0.35, -0.50, length=2.2, height=0.12)
-ac.station_pair("GLOVE_L", "GLOVE_R", (-2.6, 0.5, -0.72))
-ac.station_pair("GLOVE_L_RAIL", "GLOVE_R_RAIL", (-2.86, 0.5, -0.62))
+# 터널 팔레트 (AIM-54 등) — 터널 천장에서 내려온 짧은 받침.
+# 표는 중심선 위 1.7 m 간격이지만 AIM-54(4 m)가 겹치므로, 표의 'x=±0.6 교대' 허용을 써서
+# 앞 쌍(1 좌, 2 우) / 뒤 쌍(3 좌, 4 우)으로 나란히 배치했다.
+for i, (xx, yy) in enumerate(((-0.42, 1.25), (0.42, 1.25), (-0.42, -2.90), (0.42, -2.90)), start=1):
+    ac.pylon(xx, yy - 0.1, -0.88, length=1.4, width=0.14, side="center", rake=0.15, rear_rake=0.15)
+    ac.station(f"TUNNEL_{i}", (xx, yy, -0.88))
+# 글러브 파일런 + 바깥 어깨 레일 (AIM-54 날개와 안 부딪히게 위·바깥)
+ac.pylon(2.55, -0.55, -0.72, length=2.6, width=0.16, rake=0.3)
+ac.box((2.80, -0.45, -0.36), (0.42, 1.6, 0.08), mat="paint_dark", side="both")   # 레일 어댑터
+ac.rail(3.00, -0.35, -0.38, length=2.2, height=0.12)
+ac.station_pair("GLOVE_L", "GLOVE_R", (-2.55, -0.3, -0.72))
+ac.station_pair("GLOVE_L_RAIL", "GLOVE_R_RAIL", (-3.0, -0.3, -0.50))
 # 나셀 하부 (탱크)
 ac.pylon(1.80, -1.1, -1.08, length=1.4, width=0.12, rake=0.2)
 ac.station_pair("NAC_L", "NAC_R", gl(-1.8, -1.08, 1.0))

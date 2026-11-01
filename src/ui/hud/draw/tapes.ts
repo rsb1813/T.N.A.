@@ -98,7 +98,7 @@ export function drawSpeedTape(f: HudFrame): void {
   ctx.fillStyle = HUD_COLORS.main;
   text(ctx, intLabel(Math.max(0, Math.round(value))), x - 12 * s, cy + 1 * s, 'right');
 
-  ctx.font = monoFont(11 * s, 500);
+  ctx.font = monoFont(11 * s, 600);
   ctx.fillStyle = HUD_COLORS.mainDim;
   text(ctx, `IAS ${speedLabel(units)}`, x - 6 * s, cy - hh - 12 * s, 'right');
 
@@ -232,21 +232,23 @@ export function drawAltitudeTape(f: HudFrame): void {
   ctx.stroke();
   ctx.font = monoFont(18 * s, 700);
   ctx.fillStyle = HUD_COLORS.main;
-  text(ctx, intLabel(Math.round(value / 10) * 10), x + 12 * s + bw - 12 * s, cy + 1 * s, 'right');
+  text(ctx, intLabel(Math.round(value / 10) * 10), x + bw, cy + 1 * s, 'right');
 
-  ctx.font = monoFont(11 * s, 500);
+  ctx.font = monoFont(11 * s, 600);
   ctx.fillStyle = HUD_COLORS.mainDim;
   text(ctx, `ALT ${altitudeLabel(units)}`, x + 6 * s, cy - hh - 12 * s, 'left');
 
   const lx = x + 8 * s;
   let ly = cy + hh + 18 * s;
   const lh = 17 * s;
-  ctx.font = monoFont(13 * s, 600);
+  const vsFont = monoFont(13 * s, 600);
+  const vsText = `VS ${formatVerticalSpeed(tel.verticalSpeed, units)}`;
+  ctx.font = vsFont;
   ctx.fillStyle = HUD_COLORS.main;
-  text(ctx, `VS ${formatVerticalSpeed(tel.verticalSpeed, units)}`, lx, ly, 'left');
-  ctx.font = monoFont(10 * s, 500);
+  text(ctx, vsText, lx, ly, 'left');
+  ctx.font = monoFont(10 * s, 600);
   ctx.fillStyle = HUD_COLORS.mainDim;
-  text(ctx, verticalSpeedLabel(units), lx + 100 * s, ly + 1 * s, 'left');
+  text(ctx, verticalSpeedLabel(units), lx + f.metrics.width(ctx, vsFont, vsText) + 5 * s, ly + 1 * s, 'left');
   ly += lh;
   // 전파 고도: 낮을 때만 (1500 m 이하)
   if (tel.agl < 1500) {
@@ -285,8 +287,8 @@ export function drawHeadingTape(f: HudFrame): void {
     const x = cx + t.offset * halfW;
     if (Math.abs(x - cx) < 26 * s) continue;
     const card = cardinalLabel(t.value);
-    ctx.font = card ? monoFont(13 * s, 700) : monoFont(11 * s, 500);
-    ctx.fillStyle = card ? HUD_COLORS.main : HUD_COLORS.mainDim;
+    ctx.font = card ? monoFont(14 * s, 800) : monoFont(12 * s, 600);
+    ctx.fillStyle = HUD_COLORS.main;
     text(ctx, card ?? formatHeading(t.value), x, base - 10 * s, 'center');
   }
 

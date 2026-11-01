@@ -208,8 +208,8 @@ const PRIORITY: Record<Category, number> = {
   down: 4,
 };
 
-/** 스토리 대사가 나오는 동안에도 허용하는 카테고리 */
-const DURING_STORY = new Set<Category>(['warning', 'down', 'kill']);
+/** 스토리 대사가 나오는 동안에도 허용하는 카테고리 (명령 응답은 플레이어 입력에 대한 피드백이라 항상 허용) */
+const DURING_STORY = new Set<Category>(['warning', 'down', 'kill', 'ack']);
 
 const WARNING_POLL = 0.1;
 
@@ -369,9 +369,11 @@ export function createChatter(sim: Sim, cast: ChatterCast = DEFAULT_CHATTER_CAST
     if (!system.enabled) return;
     let delay = 0.5;
     for (const { entity, voice } of aliveWingmen()) {
+      const key = `ack:${entity.callsign}`;
+      if (sim.time - (lastCat.get(key) ?? -Infinity) < COOLDOWN.ack) continue;
       const line = pickLine(COMMAND_ACK[command][voice.style]);
       if (!line) continue;
-      emit('ack', voice.speaker, fill(line, entity.callsign ?? ''), 'friendly', delay, `ack:${entity.callsign}`);
+      emit('ack', voice.speaker, fill(line, entity.callsign ?? ''), 'friendly', delay, key);
       delay += 1.1;
     }
   };

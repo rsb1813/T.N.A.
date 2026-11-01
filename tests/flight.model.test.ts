@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { FlightModel, flightParamsFromStats, type FlightContext } from '../src/flight/flightModel';
+import { createFlightModel, FlightModel, flightParamsFromStats, type FlightContext } from '../src/flight/flightModel';
 import { FIXTURE_F14_STATS, FIXTURE_F14_SWEEP, FIXTURE_F15_STATS, FIXTURE_F16_STATS } from '../src/flight/fixtures';
 import type { ControlInput } from '../src/core/contracts';
 import type { DerivedStats } from '../src/data/schema';
@@ -10,9 +10,7 @@ import { engineThrust } from '../src/core/aero';
 const DT = 1 / 60;
 
 function make(stats: DerivedStats = FIXTURE_F16_STATS, sweep: { minDeg: number; maxDeg: number } | null = null): FlightModel {
-  const fm = new FlightModel(flightParamsFromStats(stats, sweep));
-  fm.stores = { massKg: stats.storesMassKg, dragArea: stats.storesDragArea, externalFuelKg: 0 };
-  return fm;
+  return createFlightModel(stats, sweep);
 }
 
 function ctl(o: Partial<ControlInput> = {}): ControlInput {

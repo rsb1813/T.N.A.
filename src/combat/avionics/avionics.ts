@@ -1075,20 +1075,19 @@ export class AircraftAvionics implements Avionics {
   }
 
   /**
-   * 우선순위: 30° 원뿔 안(기수에 가까운 순, 단 선택 무장 교전 거리 안의 표적이 먼저) → 미션 표적
+   * 우선순위: 30° 원뿔 안(기수에 가까운 순, 단 선택 무장으로 지금 교전 가능한 표적이 먼저) → 미션 표적
    * → 우리를 추적 중인 위협 → 거리.
    */
   private rank(c: TrackRecord[]): void {
     const o = this.owner;
     o.getForward(_fwd);
-    const engage = this.engageRangeM();
     for (const r of c) {
       _u.subVectors(r.position, o.position);
       const d = _u.length();
       const off = d > 1e-6 ? Math.acos(clamp(_fwd.dot(_u) / d, -1, 1)) * RAD : 0;
       if (off <= DESIGNATION_CONE_DEG) {
         r.rankGroup = 0;
-        r.rankKey = off + (d > engage ? DESIGNATION_CONE_DEG : 0);
+        r.rankKey = off + (this.engageable(r, d) ? 0 : DESIGNATION_CONE_DEG);
       } else if (r.entity.tags.has('target')) {
         r.rankGroup = 1;
         r.rankKey = d;
@@ -1103,12 +1102,26 @@ export class AircraftAvionics implements Avionics {
     c.sort(compareRank);
   }
 
-  /** 원뿔 안 우선순위용 교전 거리: 선택 무장 사거리(×1.2), 없으면 레이더 공칭 거리, 그것도 없으면 육안 */
-  private engageRangeM(): number {
+  /** 선택 무장으로 이 트랙과 지금 교전할 수 있나 (자동 지정 순위용 — 각도/시선 조건은 보지 않는다) */
+  private engageable(r: TrackRecord, d: number): boolean {
     const w = this.lockWeapon;
-    if (w && lockKindOf(w) !== 'none') return weaponMaxRangeM(w) * RADAR_LOCK_RANGE_FACTOR;
-    const r = this.radarRangeM;
-    return r > 0 ? r : VISUAL_AIR_FRONT_M;
+    const kind = lockKindOf(w);
+    if (!w || kind === 'none') {
+      const reach = this.radarRangeM;
+      return d <= (reach > 0 ? reach : VISUAL_AIR_FRONT_M);
+    }
+    switch (kind) {
+      case 'radar':
+      case 'sarh': {
+        if (d > weaponMaxRangeM(w) * RADAR_LOCK_RANGE_FACTOR) return false;
+        if (this._mode !== 'off' && this._mode !== 'ag' && r.radarFresh(this.now, this.radarFreshWindow(r))) return true;
+        return kind === 'radar' && !!w.guidance?.datalink && !!this.stats?.datalink?.cooperativeEngagement && r.datalinkCoop && this.now - r.datalinkAt <= HOLD.datalink;
+      }
+      case 'ir':
+        return d <= (w.guidance?.seekerRangeKm ?? 0) * 1000;
+      default:
+        return d <= weaponMaxRangeM(w) * GPS_LOCK_RANGE_FACTOR;
+    }
   }
 
   private pickBest(filter: TargetFilter): Entity | null {

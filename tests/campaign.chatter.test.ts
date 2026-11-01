@@ -140,16 +140,23 @@ describe('createChatter', () => {
     expect(t.rec.radio[0].text).toContain('Halberd 2');
   });
 
-  it('스토리 대사 중에는 잡담을 줄이고, 꺼지면 침묵', () => {
+  it('스토리 대사 중에는 발사 콜을 생략하고 명령 응답은 유지, 꺼지면 침묵', () => {
     const t = setup();
     t.sim.services.radio.say({ speaker: 'Citadel', text: '아주 긴 스토리 대사가 이어지는 중이다. 모두 집중하라. 반복한다, 집중하라.', priority: 6, duration: 8 });
+    for (let i = 0; i < 3; i++) {
+      t.launch(t.player, 'AIM-120D');
+      t.launch(t.magpie, 'AIM-9X');
+      t.step(2.6);
+    }
+    expect(t.rec.radio.filter((m) => m.text.includes('Fox')).length).toBe(0);
     t.sim.events.emit('wingmanCommand', { command: 'attack' });
     t.step(3);
-    expect(t.rec.radio.length).toBe(1);
+    expect(t.rec.radio.map((m) => m.speaker)).toEqual(['Citadel', 'Magpie', 'Tarot']);
     t.chatter.enabled = false;
     t.player.avionics.missileWarning = true;
+    t.launch(t.player, 'AIM-120D');
     t.step(10);
-    expect(t.rec.radio.length).toBe(1);
+    expect(t.rec.radio.length).toBe(3);
     t.chatter.dispose();
   });
 

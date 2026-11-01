@@ -173,6 +173,11 @@ export class CameraRig implements System {
       _posePos.copy(ac.position).add(_tmp);
       _poseQuat.slerpQuaternions(this.fromQuat, _poseQuat, t);
     }
+    // 지면 아래로 들어가지 않게 (저고도 배면 비행 등)
+    if (this.stateNow !== 'cockpit') {
+      const floor = sim.services.terrain.heightAt(_posePos.x, _posePos.z) + 1.5;
+      if (_posePos.y < floor) _posePos.y = floor;
+    }
     cam.position.copy(_posePos);
     cam.quaternion.copy(_poseQuat);
     this.applyShake(ac, sim, dt);

@@ -54,17 +54,17 @@ const KEYS: Key[] = [
   { el: -14, zenith: 0x061026, horizon: 0x1a2a4c, glow: 0x000000, glowStrength: 0, light: 0x9fb6ea, lightI: 0.75, hemi: 0x3a5288, hemiI: 1.15, exposure: 1.55, stars: 1 },
   { el: -6, zenith: 0x0c1a3e, horizon: 0x2c3a62, glow: 0x3a2030, glowStrength: 0.25, light: 0x8a9ad0, lightI: 0.6, hemi: 0x3c4c80, hemiI: 1.1, exposure: 1.4, stars: 0.75 },
   { el: -2, zenith: 0x23356a, horizon: 0x6a6280, glow: 0xd8683a, glowStrength: 0.9, light: 0xff9c64, lightI: 0.7, hemi: 0x5c5c80, hemiI: 1.05, exposure: 1.15, stars: 0.12 },
-  { el: 2, zenith: 0x34569a, horizon: 0xb3a8b0, glow: 0xf29a58, glowStrength: 1, light: 0xffb47a, lightI: 1.6, hemi: 0x8a94b4, hemiI: 1.15, exposure: 1.05, stars: 0 },
-  { el: 8, zenith: 0x3a6cb8, horizon: 0xcdd0d4, glow: 0xf3c487, glowStrength: 0.7, light: 0xffd9a8, lightI: 2.7, hemi: 0xa6bad6, hemiI: 1.05, exposure: 1, stars: 0 },
-  { el: 20, zenith: 0x3a7cd0, horizon: 0xc6daee, glow: 0xfff0d8, glowStrength: 0.35, light: 0xfff2e0, lightI: 3.3, hemi: 0xb6cce6, hemiI: 1.1, exposure: 0.95, stars: 0 },
-  { el: 50, zenith: 0x3576d2, horizon: 0xbcd6f0, glow: 0xfff8f0, glowStrength: 0.25, light: 0xfffaf2, lightI: 3.5, hemi: 0xbcd2ec, hemiI: 1.1, exposure: 0.92, stars: 0 },
+  { el: 2, zenith: 0x34569a, horizon: 0xb3a8b0, glow: 0xf29a58, glowStrength: 1, light: 0xffb47a, lightI: 1.6, hemi: 0x8a94b4, hemiI: 1.15, exposure: 0.92, stars: 0 },
+  { el: 8, zenith: 0x3a6cb8, horizon: 0xcdd0d4, glow: 0xf3c487, glowStrength: 0.7, light: 0xffd9a8, lightI: 2.7, hemi: 0xa6bad6, hemiI: 1.05, exposure: 0.84, stars: 0 },
+  { el: 20, zenith: 0x3a7cd0, horizon: 0xc6daee, glow: 0xfff0d8, glowStrength: 0.35, light: 0xfff2e0, lightI: 3.3, hemi: 0xb6cce6, hemiI: 1.1, exposure: 0.76, stars: 0 },
+  { el: 50, zenith: 0x3576d2, horizon: 0xbcd6f0, glow: 0xfff8f0, glowStrength: 0.25, light: 0xfffaf2, lightI: 3.5, hemi: 0xbcd2ec, hemiI: 1.1, exposure: 0.72, stars: 0 },
 ];
 
 const WEATHER: Record<Weather, { grey: number; dark: number; light: number; hemi: number; fog: number; glow: number; disc: number }> = {
   clear: { grey: 0, dark: 1, light: 1, hemi: 1, fog: 1, glow: 1, disc: 1 },
   scattered: { grey: 0.12, dark: 0.98, light: 0.95, hemi: 1.03, fog: 1.15, glow: 0.9, disc: 1 },
-  overcast: { grey: 0.82, dark: 0.82, light: 0.32, hemi: 1.25, fog: 2.0, glow: 0.25, disc: 0 },
-  storm: { grey: 0.92, dark: 0.5, light: 0.14, hemi: 0.95, fog: 3.1, glow: 0.05, disc: 0 },
+  overcast: { grey: 0.82, dark: 0.78, light: 0.3, hemi: 0.95, fog: 2.0, glow: 0.25, disc: 0 },
+  storm: { grey: 0.92, dark: 0.42, light: 0.12, hemi: 0.62, fog: 3.1, glow: 0.05, disc: 0 },
 };
 
 const BASE_FOG_DENSITY = 1 / 64_000;
@@ -131,7 +131,7 @@ export function computeSkyState(timeOfDay: number, weather: Weather, biome: Biom
     horizon.lerp(_c1, biome.haze.amount * day);
   }
   greyOf(zenith, w.grey, w.dark);
-  greyOf(horizon, w.grey * 0.9, lerp(1, w.dark, 0.8));
+  greyOf(horizon, w.grey * 0.9, lerp(1, w.dark, 0.95));
   greyOf(hemiSky, w.grey * 0.7, lerp(1, w.dark, 0.6));
 
   const hemiGround = new THREE.Color().setHex(biome.bounce);
@@ -150,7 +150,7 @@ export function computeSkyState(timeOfDay: number, weather: Weather, biome: Biom
   const cloudLit = new THREE.Color().copy(lightColor).multiplyScalar(lerp(0.55, 1.15, day)).lerp(hemiSky, 0.25);
   const cloudShade = new THREE.Color().copy(hemiSky).multiplyScalar(lerp(0.32, 0.6, day));
   if (weather === 'overcast' || weather === 'storm') {
-    const g = weather === 'storm' ? 0.42 : 0.72;
+    const g = weather === 'storm' ? 0.3 : 0.62;
     cloudLit.setRGB(g, g * 1.01, g * 1.04).multiplyScalar(lerp(0.15, 1, day));
     cloudShade.setRGB(g * 0.55, g * 0.57, g * 0.62).multiplyScalar(lerp(0.15, 1, day));
   }
@@ -173,7 +173,7 @@ export function computeSkyState(timeOfDay: number, weather: Weather, biome: Biom
     hemiSky,
     hemiGround,
     hemiIntensity,
-    exposure: lerp(a.exposure, b.exposure, t) * (weather === 'storm' ? 1.12 : weather === 'overcast' ? 1.05 : 1),
+    exposure: lerp(a.exposure, b.exposure, t),
     fogDensity,
     stars: lerp(a.stars, b.stars, t) * (1 - w.grey * 0.9),
     sunDisc: w.disc * smoothstep(-2, 1, elevationDeg),

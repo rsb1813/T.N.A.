@@ -46,6 +46,30 @@ describe('자동 표적 지정', () => {
     expect(near.alive && cone2.alive).toBe(true);
   });
 
+  it('원뿔 안에서는 선택 무장으로 교전 가능한 표적이 먼저 (AIM-120D: 레이더 트랙 필요)', () => {
+    const { sim, player } = setup({ radar: SAMPLE_RADAR.aesa, rwr: SAMPLE_RWR.modern, irst: { rangeKm: 60, fovDeg: 70 } });
+    // 정면 스텔스기는 IRST 로만 보이고, 20° 옆 일반기는 레이더로 보인다
+    const stealth = new TestAircraft(sim, { faction: 'PAX', name: 'XF-1 Lampyris', position: polar(1, 30_000, 9000), heading: 0, rcs: 0.0002 });
+    stealth.moving = false;
+    const conv = bandit(sim, 20, 90_000);
+    stepSim(sim, 3);
+    expect(player.avionics.trackOf(stealth)?.source).toBe('irst');
+    expect(player.avionics.target?.entity).toBe(conv);
+    // AIM-9X (시커 18 km): 10 km 의 20° 표적은 교전 가능, 30 km 정면 표적은 불가
+    player.stores.weapon = SAMPLE_WEAPONS.aim9x;
+    conv.position.copy(polar(20, 10_000, 9000));
+    stepSim(sim, 1.5);
+    player.avionics.designate(null);
+    stepSim(sim, 0.1);
+    expect(player.avionics.target?.entity).toBe(conv);
+    // 둘 다 사거리 안이면 기수에 더 가까운 쪽
+    stealth.position.copy(polar(1, 12_000, 9000));
+    stepSim(sim, 0.5);
+    player.avionics.designate(null);
+    stepSim(sim, 0.1);
+    expect(player.avionics.target?.entity).toBe(stealth);
+  });
+
   it('원뿔 밖: 미션 표적 → 우리를 추적 중인 위협 → 거리 순', () => {
     const { sim, player } = setup();
     const close = bandit(sim, 50, 20_000);

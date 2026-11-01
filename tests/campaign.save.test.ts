@@ -56,6 +56,7 @@ const DB: GameDatabase = {
 function result(over: Partial<MissionResult> = {}): MissionResult {
   return {
     missionId: 'm01', title: '균열의 계곡', success: true, rank: 'A', score: 4000, timeSec: 500, kills: [], totalKills: 10,
+    killsByClass: { air: 8, ground: 2, sea: 0, structure: 0, weapon: 0 },
     shotsFired: 10, hits: 7, accuracy: 0.7, gunHits: 0, damageTaken: 10, creditsEarned: 9000, breakdown: [], objectives: [],
     wingmanKills: 2, friendlyLosses: 0, ...over,
   };

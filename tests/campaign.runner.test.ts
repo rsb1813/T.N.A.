@@ -168,6 +168,14 @@ describe('MissionRunner — 목표와 종료', () => {
     expect(res.kills[0].count).toBe(3);
   });
 
+  it('objective(id, text, primary) 축약형', () => {
+    const r = rig(makeDef((ctx) => ctx.objective('opt', '보조 목표', false)));
+    expect(r.runner.state.objectives[0]).toMatchObject({ id: 'opt', primary: false, status: 'active' });
+    r.runner.context.getObjective('opt')!.complete();
+    r.step(3);
+    expect(r.runner.state.result).toBeNull(); // 보조 목표만으로는 자동 성공하지 않는다
+  });
+
   it('숨김 주목표가 공개되면 자동 성공이 미뤄진다', () => {
     const r = rig(
       makeDef((ctx) => {
@@ -438,6 +446,7 @@ describe('점수 / 랭크 / 크레딧', () => {
     expect(res.hits).toBe(3);
     expect(res.accuracy).toBeCloseTo(0.75);
     expect(res.gunHits).toBe(1);
+    expect(res.killsByClass).toEqual({ air: 0, ground: 2, sea: 0, structure: 0, weapon: 0 });
     expect(res.damageTaken).toBeCloseTo(25);
     const radarScore = Math.round(50 * TARGET_TAG_MULT); // 빈 DB → 클래스 점수(ground 50) x 표적 배율
     const truckScore = 50;

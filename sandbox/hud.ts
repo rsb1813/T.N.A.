@@ -20,7 +20,7 @@ import type {
 } from '../src/core/contracts';
 import { Entity } from '../src/core/entity';
 import { Game } from '../src/core/game';
-import { atmosphere, DEG, headingToDir, quatFromHeadingPitch, RHO0, tasToIas } from '../src/core/math';
+import { atmosphere, DEG, headingToDir, quatFromHeadingPitch, tasToIas } from '../src/core/math';
 import type { MissionState, TerrainService } from '../src/core/services';
 import { createSim, type Sim } from '../src/core/sim';
 import type { EntityKind, Faction, TargetClass } from '../src/core/types';
@@ -244,7 +244,6 @@ class MockAircraft extends Entity implements AircraftLike {
     t.headingDeg = o.heading;
     t.pitchDeg = o.pitch;
     t.rollDeg = o.roll;
-    void RHO0;
   }
 }
 

@@ -196,7 +196,7 @@ function script(ctx: MissionContext): void {
       const victim = ctx.alive('won_mig')[0] ?? ctx.alive('won_air').find((e) => !e.tags.has('kifaru'));
       if (victim) {
         ctx.launch({ weapon: ['Meteor', 'AIM-120D'], from: orb, target: victim });
-        ctx.say('orb', 'Regalia 2, Fox Three.', { side: 'enemy' });
+        ctx.say('orb', 'Regalia 2, Fox Three. 현지 기 하나 정리한다.', { side: 'enemy' });
       }
     });
     ctx.after(16, () => {

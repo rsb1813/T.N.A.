@@ -61,6 +61,10 @@ export interface StatMods {
   maxMachAdd?: number;
   /** 애프터버너 없이 초음속 순항 가능 */
   supercruise?: boolean;
+  /** 전자전 재밍 강도 가산 (0..1, 항전 공간 확장 등) */
+  ewPowerAdd?: number;
+  /** 채프·플레어 수량 배율 */
+  cmsMult?: number;
 }
 
 export interface RadarStats {

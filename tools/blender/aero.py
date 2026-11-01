@@ -1318,9 +1318,16 @@ class Aircraft:
                 p = (np.array(hit[0]) if hit[0] is not None else p0) + n * offset
                 pts.append(p)
             ids = msh.add_verts(pts)
+            P = np.asarray(pts)
             for f in F:
-                msh.add_face([ids[i] for i in f], mat, 60.0)
-            msh.orient_from(c - n * 2.0)
+                face = [ids[i] for i in f]
+                q = P[list(f)]
+                fn = np.zeros(3)
+                for k in range(len(q)):   # 면마다 바깥(n) 쪽을 보게 감기 방향을 맞춘다
+                    fn += np.cross(q[k], q[(k + 1) % len(q)])
+                if np.dot(fn, n) < 0:
+                    face.reverse()
+                msh.add_face(face, mat, 60.0)
             self._target(target).extend(msh)
             out.append(msh)
         return out
@@ -1374,6 +1381,27 @@ class Aircraft:
         self.objects = objs
         return objs
 
+    def _debug_pose(self):
+        """미리보기 전용: 환경변수 TNA_POSE="wing_L:z:48,wing_R:z:-48,canopy:x:-30" 로 부품을 로컬 축(Blender)
+        기준으로 돌리고, TNA_HIDE_OPT=1 이면 opt_* 를 빼고 내보낸다. 게임용 빌드에는 쓰지 않는다."""
+        pose = os.environ.get("TNA_POSE", "").strip()
+        for item in filter(None, (p.strip() for p in pose.split(","))):
+            name, axis, deg = item.split(":")
+            obj = self.objects.get(name)
+            if obj is None:
+                print(f"[aero] TNA_POSE: '{name}' 없음")
+                continue
+            i = "xyz".index(axis.lower())
+            obj.rotation_mode = "XYZ"
+            r = list(obj.rotation_euler)
+            obj.matrix_basis = obj.matrix_basis @ Matrix.Rotation(math.radians(float(deg)), 4, "XYZ"[i])
+            del r
+        if os.environ.get("TNA_HIDE_OPT"):
+            for name, obj in list(self.objects.items()):
+                if name.startswith("opt_"):
+                    bpy.data.objects.remove(obj, do_unlink=True)
+                    self.objects.pop(name)
+
     def report(self):
         tris = self.triangles()
         names = sorted(n for n, _, _ in self.empties)
@@ -1391,6 +1419,7 @@ class Aircraft:
             blend = args[1]
         tris = self.report()
         self.build()
+        self._debug_pose()
         tna.export_glb(out, export_extras=True)
         if blend:
             tna.save_blend(blend)

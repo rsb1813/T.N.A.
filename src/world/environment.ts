@@ -7,7 +7,7 @@ import { CloudSystem } from './clouds';
 import { AIRBASE_FLAT_RADIUS, AirbaseBuilder } from './decor/airbase';
 import { buildCities, createBuildingMaterial } from './decor/city';
 import { TreeField } from './decor/trees';
-import { Ocean } from './ocean';
+import { Ocean, bakeWaterTexture } from './ocean';
 import { SkySystem, type SkyState } from './sky';
 import { TerrainRenderer, type TerrainRendererOptions } from './terrain/chunks';
 import { createTerrainMaterial } from './terrain/material';
@@ -78,11 +78,12 @@ export function createEnvironment(
 
   const terrain = new Terrain(opts, build);
   const sky = new SkySystem(renderer, scene, opts.timeOfDay, opts.weather, biome);
-  const terrainMat = createTerrainMaterial(biome);
+  const waterTex = bakeWaterTexture(terrain);
+  const terrainMat = createTerrainMaterial(biome, waterTex, terrain.extent);
   const chunks = new TerrainRenderer(terrain, terrainMat.material, build.render);
   scene.add(chunks.group);
 
-  const ocean = new Ocean(terrain, biome, WAVE_ROUGHNESS[opts.weather] ?? 1);
+  const ocean = new Ocean(terrain, biome, WAVE_ROUGHNESS[opts.weather] ?? 1, waterTex);
   scene.add(ocean.mesh);
 
   const clouds = new CloudSystem(opts.weather, biome, opts.seed, sky.state.lightDir, (a) => sky.triggerFlash(a));
@@ -192,6 +193,7 @@ export function createEnvironment(
       chunks.dispose();
       terrainMat.material.dispose();
       ocean.dispose();
+      waterTex.dispose();
       clouds.dispose();
       sky.dispose();
       airbases.dispose();

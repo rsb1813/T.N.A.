@@ -36,6 +36,8 @@ uniform float uSnowLine;
 uniform vec2 uRockSlope;
 uniform vec2 uBeachH;
 uniform float uNight;
+uniform sampler2D uWater;
+uniform float uExtent;
 ${GLSL_NOISE}
 `;
 
@@ -74,7 +76,10 @@ if (vSurf.y > 0.004) {
 // forest canopy
 float canopyN = tnaNoise(wp.xz * 0.045) * 0.6 + tnaNoise(wp.xz * 0.19 + 3.0) * 0.4;
 float fmask = smoothstep(0.18, 0.55, vSurf.x + (canopyN - 0.5) * 0.35);
-vec3 forestCol = mix(uForestDark, uForest, canopyN) * (0.9 + 0.2 * m2);
+float patchN = tnaNoise(wp.xz * 0.0045 + 31.0);
+vec3 forestCol = mix(uForestDark, uForest, clamp(canopyN * 0.7 + patchN * 0.6 - 0.15, 0.0, 1.0));
+forestCol *= 0.82 + 0.3 * m2 + 0.12 * (tnaNoise(wp.xz * 0.0009 - 7.0) - 0.5);
+forestCol = mix(forestCol, forestCol * vec3(1.12, 1.08, 0.78), smoothstep(0.62, 0.85, patchN) * 0.5);
 albedo = mix(albedo, forestCol, fmask);
 
 // city ground with a street grid (80 m blocks, matches building placement)
@@ -88,8 +93,8 @@ if (vSurf.z > 0.004) {
   vec3 lot = uUrban * (0.8 + 0.32 * tnaHash12(floor(sp) + 3.0));
   vec3 urb = mix(lot, uUrban * 0.5, street);
   albedo = mix(albedo, urb, vSurf.z);
-  float lamps = mix(street, 0.22, smoothstep(3000.0, 9000.0, dist));
-  totalEmissiveRadiance += vec3(1.0, 0.6, 0.28) * lamps * vSurf.z * uNight * 0.9;
+  float lamps = mix(street * (0.5 + 0.5 * step(0.5, tnaHash12(floor(wp.xz / 25.0)))), 0.12, smoothstep(3000.0, 9000.0, dist));
+  totalEmissiveRadiance += vec3(1.0, 0.58, 0.25) * lamps * vSurf.z * uNight * 0.3;
 }
 
 albedo = mix(albedo, uScorch * (0.8 + 0.4 * m2), vSurf.w);
@@ -104,11 +109,15 @@ albedo = mix(albedo, rockCol, rockW);
 // snow on high, not-too-steep ground
 float sn = (m1 - 0.5) * 320.0 + (m2 - 0.5) * 140.0;
 float snowW = smoothstep(uSnowLine - 60.0, uSnowLine + 140.0, wp.y + sn) * (1.0 - smoothstep(0.26 + m2 * 0.12, 0.5 + m2 * 0.1, slope));
-albedo = mix(albedo, uSnow, snowW);
+albedo = mix(albedo, uSnow * (0.92 + 0.1 * tnaNoise(wp.xz * 0.004)), snowW);
 
-// beaches near sea level
-float bw = (1.0 - smoothstep(uBeachH.x, uBeachH.y, wp.y + (m2 - 0.5) * 3.0)) * (1.0 - rockW) * (1.0 - vSurf.z);
-albedo = mix(albedo, uBeach, bw);
+// sea beaches near sea level; darker muddy banks along rivers and lakes
+vec2 wuv = (wp.xz + uExtent) / (2.0 * uExtent);
+float openWater = texture2D(uWater, clamp(wuv, 0.0, 1.0)).g;
+float low = (1.0 - smoothstep(uBeachH.x, uBeachH.y, wp.y + (m2 - 0.5) * 3.0)) * (1.0 - rockW) * (1.0 - vSurf.z);
+float seaSide = smoothstep(0.06, 0.22, openWater);
+albedo = mix(albedo, uBeach, low * seaSide);
+albedo = mix(albedo, albedo * vec3(0.62, 0.58, 0.5), low * (1.0 - seaSide) * (1.0 - smoothstep(0.0, 3.0, wp.y)));
 
 // procedural detail near the camera + broad variation everywhere
 float df = 1.0 - smoothstep(900.0, 6500.0, dist);
@@ -125,7 +134,11 @@ function lin(hex: number): THREE.Color {
   return new THREE.Color().setHex(hex);
 }
 
-export function createTerrainMaterial(biome: BiomeDef): { material: THREE.MeshStandardMaterial; night: { value: number } } {
+export function createTerrainMaterial(
+  biome: BiomeDef,
+  waterTexture: THREE.Texture,
+  extent: number,
+): { material: THREE.MeshStandardMaterial; night: { value: number } } {
   const p = biome.palette;
   const mat = new THREE.MeshStandardMaterial({
     name: 'tna_terrain',
@@ -150,6 +163,8 @@ export function createTerrainMaterial(biome: BiomeDef): { material: THREE.MeshSt
     uRockSlope: { value: new THREE.Vector2(biome.rockSlope[0], biome.rockSlope[1]) },
     uBeachH: { value: new THREE.Vector2(1.5, biome.id === 'arctic' ? 4 : 7) },
     uNight: { value: 0 },
+    uWater: { value: waterTexture },
+    uExtent: { value: extent },
   };
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);

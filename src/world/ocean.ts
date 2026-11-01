@@ -104,8 +104,9 @@ export class Ocean {
   private readonly depthTex: THREE.DataTexture;
   private time = 0;
 
-  constructor(terrain: Terrain, biome: BiomeDef, roughness: number) {
-    this.depthTex = Ocean.bakeDepth(terrain);
+  /** waterTexture from bakeWaterTexture(); owned by the caller */
+  constructor(terrain: Terrain, biome: BiomeDef, roughness: number, waterTexture: THREE.DataTexture) {
+    this.depthTex = waterTexture;
     this.material = new THREE.ShaderMaterial({
       name: 'tna_ocean',
       vertexShader: VERT,
@@ -141,55 +142,6 @@ export class Ocean {
     this.mesh.renderOrder = -10;
   }
 
-  /**
-   * RG depth texture over the heightfield: R = local depth (0 = land/shoreline, 1 = >= 60 m),
-   * G = fraction of open water within ~1.5 km (separates coasts from narrow rivers and lakes).
-   */
-  private static bakeDepth(terrain: Terrain): THREE.DataTexture {
-    const S = 1024;
-    const N = terrain.gridSize;
-    const H = terrain.heights;
-    const depth = new Float32Array(S * S);
-    const wet = new Float32Array(S * S);
-    for (let j = 0; j < S; j++) {
-      const gj = Math.round((j / (S - 1)) * (N - 1)) * N;
-      for (let i = 0; i < S; i++) {
-        const h = H[gj + Math.round((i / (S - 1)) * (N - 1))];
-        depth[j * S + i] = h < 0 ? Math.sqrt(Math.min(1, -h / 60)) : 0;
-        wet[j * S + i] = h < 0 ? 1 : 0;
-      }
-    }
-    // separable box blur of the water mask (radius r texels)
-    const r = 6;
-    const tmp = new Float32Array(S * S);
-    for (let j = 0; j < S; j++) {
-      let acc = 0;
-      for (let i = -r; i <= r; i++) acc += wet[j * S + Math.min(S - 1, Math.max(0, i))];
-      for (let i = 0; i < S; i++) {
-        tmp[j * S + i] = acc / (2 * r + 1);
-        acc += wet[j * S + Math.min(S - 1, i + r + 1)] - wet[j * S + Math.max(0, i - r)];
-      }
-    }
-    const data = new Uint8Array(S * S * 2);
-    for (let i = 0; i < S; i++) {
-      let acc = 0;
-      for (let j = -r; j <= r; j++) acc += tmp[Math.min(S - 1, Math.max(0, j)) * S + i];
-      for (let j = 0; j < S; j++) {
-        const k = j * S + i;
-        data[k * 2] = Math.round(depth[k] * 255);
-        data[k * 2 + 1] = Math.round((acc / (2 * r + 1)) * 255);
-        acc += tmp[Math.min(S - 1, j + r + 1) * S + i] - tmp[Math.max(0, j - r) * S + i];
-      }
-    }
-    const tex = new THREE.DataTexture(data, S, S, THREE.RGFormat, THREE.UnsignedByteType);
-    tex.magFilter = THREE.LinearFilter;
-    tex.minFilter = THREE.LinearFilter;
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-    tex.flipY = false;
-    tex.needsUpdate = true;
-    return tex;
-  }
-
   setSky(s: SkyState): void {
     const u = this.material.uniforms;
     u.uZenith.value.copy(s.zenith);
@@ -213,6 +165,55 @@ export class Ocean {
     this.mesh.removeFromParent();
     this.mesh.geometry.dispose();
     this.material.dispose();
-    this.depthTex.dispose();
   }
+}
+
+/**
+ * RG water texture over the heightfield: R = local depth (0 = land/shoreline, 1 = >= 60 m),
+ * G = fraction of open water within ~1.5 km (separates coasts from narrow rivers and lakes).
+ * Shared by the ocean (shallows, foam) and the terrain shader (beaches vs. river banks).
+ */
+export function bakeWaterTexture(terrain: Terrain): THREE.DataTexture {
+  const S = 1024;
+  const N = terrain.gridSize;
+  const H = terrain.heights;
+  const depth = new Float32Array(S * S);
+  const wet = new Float32Array(S * S);
+  for (let j = 0; j < S; j++) {
+    const gj = Math.round((j / (S - 1)) * (N - 1)) * N;
+    for (let i = 0; i < S; i++) {
+      const h = H[gj + Math.round((i / (S - 1)) * (N - 1))];
+      depth[j * S + i] = h < 0 ? Math.sqrt(Math.min(1, -h / 60)) : 0;
+      wet[j * S + i] = h < 0 ? 1 : 0;
+    }
+  }
+  // separable box blur of the water mask (radius r texels)
+  const r = 6;
+  const tmp = new Float32Array(S * S);
+  for (let j = 0; j < S; j++) {
+    let acc = 0;
+    for (let i = -r; i <= r; i++) acc += wet[j * S + Math.min(S - 1, Math.max(0, i))];
+    for (let i = 0; i < S; i++) {
+      tmp[j * S + i] = acc / (2 * r + 1);
+      acc += wet[j * S + Math.min(S - 1, i + r + 1)] - wet[j * S + Math.max(0, i - r)];
+    }
+  }
+  const data = new Uint8Array(S * S * 2);
+  for (let i = 0; i < S; i++) {
+    let acc = 0;
+    for (let j = -r; j <= r; j++) acc += tmp[Math.min(S - 1, Math.max(0, j)) * S + i];
+    for (let j = 0; j < S; j++) {
+      const k = j * S + i;
+      data[k * 2] = Math.round(depth[k] * 255);
+      data[k * 2 + 1] = Math.round((acc / (2 * r + 1)) * 255);
+      acc += tmp[Math.min(S - 1, j + r + 1) * S + i] - tmp[Math.max(0, j - r) * S + i];
+    }
+  }
+  const tex = new THREE.DataTexture(data, S, S, THREE.RGFormat, THREE.UnsignedByteType);
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearFilter;
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.flipY = false;
+  tex.needsUpdate = true;
+  return tex;
 }

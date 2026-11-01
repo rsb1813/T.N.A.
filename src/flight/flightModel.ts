@@ -113,6 +113,24 @@ export function flightParamsFromStats(
   };
 }
 
+/**
+ * DerivedStats 로 독립 비행모델 생성 (data 보정 테스트, AI 기동 예측용).
+ * 무장 질량/항력은 stats 값으로 고정, 내부 연료 = stats.fuelKg (내부 용량 이내).
+ */
+export function createFlightModel(
+  stats: DerivedStats,
+  variableSweep?: { minDeg: number; maxDeg: number } | null,
+  init: FlightModelInit = {},
+): FlightModel {
+  const fm = new FlightModel(flightParamsFromStats(stats, variableSweep), {
+    internalFuelKg: Math.min(stats.fuelKg, stats.fuelCapacityKg),
+    ...init,
+  });
+  fm.stores = { massKg: stats.storesMassKg, dragArea: stats.storesDragArea, externalFuelKg: 0 };
+  fm.massKg = fm.currentMass();
+  return fm;
+}
+
 // ---------------------------------------------------------------- 튜닝 상수
 
 /** 아이들 추력 (군용추력 대비) */

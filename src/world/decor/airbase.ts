@@ -318,7 +318,7 @@ export class AirbaseBuilder {
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     const m = new THREE.PointsMaterial({
-      size: 5,
+      size: 3,
       sizeAttenuation: false,
       map: this.glowTex,
       vertexColors: true,
@@ -339,8 +339,8 @@ export class AirbaseBuilder {
 
   /** 0 = day, 1 = night: runway lights and lit tower cab */
   setNight(night: number, root: THREE.Object3D): void {
-    for (const m of this.lightMaterials) m.opacity = night;
-    for (const m of this.windowMaterials) m.emissiveIntensity = night * 1.4;
+    for (const m of this.lightMaterials) m.opacity = night * 0.55;
+    for (const m of this.windowMaterials) m.emissiveIntensity = night * 0.5;
     root.traverse((o) => {
       if ((o as THREE.Points).isPoints) o.visible = night > 0.05;
     });

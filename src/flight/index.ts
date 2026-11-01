@@ -8,7 +8,7 @@
 //   const rig = new CameraRig(game.camera, input); rig.setTarget(ac); game.addSystem(rig);
 //
 // FlightModel 은 순수 계산 클래스 (AI 의 기동 예측/테스트용으로 단독 사용 가능).
-export { FlightModel, flightParamsFromStats, alphaForCl } from './flightModel';
+export { FlightModel, flightParamsFromStats, createFlightModel, alphaForCl } from './flightModel';
 export type { FlightParams, FlightContext, FlightStoresLoad, FlightDamage, FlightModelInit } from './flightModel';
 export { Aircraft, FACTION_PAINT, turnRateDeg } from './aircraft';
 export type { AircraftOptions } from './aircraft';

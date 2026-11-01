@@ -109,8 +109,8 @@ export function drawRwr(f: HudFrame, L: ScopeLayout): void {
   }
 
   // 아래 상태 줄: RWR / MAW
-  const ly = y + R + 10 * s;
-  ctx.font = monoFont(10 * s, 700);
+  const ly = y + R + 11 * s;
+  ctx.font = monoFont(11 * s, 700);
   ctx.fillStyle = hasRwr ? HUD_COLORS.main : HUD_COLORS.mainDim;
   text(ctx, hasRwr ? 'RWR' : 'RWR ---', x - 14 * s, ly, 'right');
   const hasMaw = !!p.stats?.maw;
@@ -118,7 +118,7 @@ export function drawRwr(f: HudFrame, L: ScopeLayout): void {
     ctx.fillStyle = HUD_COLORS.main;
     text(ctx, 'MAW', x + 14 * s, ly, 'left');
   } else {
-    ctx.font = sansFont(10 * s, 600);
+    ctx.font = sansFont(11 * s, 700);
     ctx.fillStyle = HUD_COLORS.caution;
     text(ctx, 'MAW 없음', x + 14 * s, ly, 'left');
   }
@@ -324,9 +324,9 @@ export function drawMinimap(
   ctx.fillStyle = HUD_COLORS.main;
   text(ctx, 'N', x + (_mp.x / nl) * (R - 9 * s), y + (_mp.y / nl) * (R - 9 * s), 'center');
 
-  ctx.font = monoFont(10 * s, 600);
-  ctx.fillStyle = HUD_COLORS.mainDim;
-  text(ctx, `${Math.round(distanceIn(range, units))} ${distanceLabel(units)}`, x + R * 0.72, y - R * 0.86, 'left');
+  ctx.font = monoFont(11 * s, 700);
+  ctx.fillStyle = HUD_COLORS.main;
+  text(ctx, `${Math.round(distanceIn(range, units))} ${distanceLabel(units)}`, x + R * 0.74, y - R * 0.9, 'left');
 }
 
 function drawMapEntity(

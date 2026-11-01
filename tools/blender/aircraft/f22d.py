@@ -90,7 +90,8 @@ ac.decal((0.0, -1.6, zb), (0, 0, -1), aero.shape_frame(1.25, 4.2, t=0.03, split=
 for sx in (1, -1):
     ac.decal((1.30 * sx, 0.6, -0.55), (0.35 * sx, 0, -1), aero.shape_frame(0.45, 2.3, t=0.028, saw=2),
              up=(0, 1, 0), mat="paint_dark", rot=90)
-ac.station("BAY_C", gl(0, -0.7, 0.5))
+# 내부 무장창: 표의 대략값(y=-0.7)은 동체 아랫면 밖이라, 무장이 창 안에 완전히 들어가도록 러그를 올렸다
+ac.station("BAY_C", gl(0, -0.30, 0.5))
 ac.station_pair("BAY_SL", "BAY_SR", gl(-1.2, -0.3, -1.0))
 
 # 외부 파일런 (opt_pylons, 기본 숨김)

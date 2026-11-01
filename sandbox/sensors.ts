@@ -168,7 +168,7 @@ interface View {
   clip: [number, number, number, number];
 }
 const wide: View = { cx: 360, cy: 655, s: 2.55 / 1000, clip: [0, 0, 720, H] };
-const close: View = { cx: 1000, cy: 238, s: 12.5 / 1000, clip: [722, 0, 558, 478] };
+const close: View = { cx: 1000, cy: 232, s: 11.6 / 1000, clip: [722, 0, 558, 436] };
 
 function toScreen(v: View, p: THREE.Vector3): [number, number] {
   return [v.cx + (p.x - player.position.x) * v.s, v.cy + (p.z - player.position.z) * v.s];
@@ -565,9 +565,9 @@ function drawClose(): void {
 
 function drawStatus(): void {
   const x = 732;
-  let y = 488;
+  let y = 444;
   ctx.fillStyle = '#0b121b';
-  ctx.fillRect(722, 480, 558, 240);
+  ctx.fillRect(722, 438, 558, 282);
   const line = (text: string, color = COLORS.text, size = 12) => {
     ctx.font = font(size);
     ctx.fillStyle = color;
@@ -581,7 +581,7 @@ function drawStatus(): void {
   line(`지정: ${av.target ? `${shortLabel(av.target.entity.name)} ${km(av.target.rangeM)} km` : '없음'} · AIM-120D 락: ${lk.status} ${Math.round(lk.progress * 100)}% · 미사일 경보: ${av.missileWarning ? '예' : '아니오'}`, av.missileWarning ? COLORS.warn : COLORS.text, 13);
   y += 2;
   line(`트랙 ${av.tracks.length}개`, COLORS.dim);
-  const tracks = [...av.tracks].sort((a, b) => a.rangeM - b.rangeM).slice(0, 7);
+  const tracks = [...av.tracks].sort((a, b) => a.rangeM - b.rangeM).slice(0, 6);
   for (const t of tracks) {
     line(
       `  ${SOURCE_NAME[t.source].padEnd(5, ' ')} ${shortLabel(t.entity.name).padEnd(10, ' ')} ${km(t.rangeM).padStart(5, ' ')} km  품질 ${t.quality.toFixed(2)} ${t.hostile ? '적' : '아군/중립'}${t.identified ? ' 식별' : ''}`,

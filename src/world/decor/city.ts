@@ -52,8 +52,8 @@ const FRAG_MAIN = /* glsl */ `
   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.07, 0.09, 0.12), win * 0.7);
   if (bn.y > 0.6) diffuseColor.rgb *= 0.72;
   float on = step(0.58, tnaHash12(cell + floor(vBWPos.xz / 40.0) * 17.0 + bn.xz * 5.0));
-  float lit = mix(on * win, 0.42 * 0.33 * wall, far);
-  totalEmissiveRadiance += vec3(1.0, 0.76, 0.42) * lit * uNight * 2.2;
+  float lit = mix(on * win, 0.12 * wall, far);
+  totalEmissiveRadiance += vec3(1.0, 0.72, 0.38) * lit * uNight * 0.7;
 }
 #include <emissivemap_fragment>
 `;

@@ -7,7 +7,7 @@ import type { EnvironmentOptions } from '../core/environment';
 import type { Rng } from '../core/rng';
 import type { AircraftSpawn, ObjectiveState, RadioMessage } from '../core/services';
 import type { Sim } from '../core/sim';
-import type { AISkill, Faction } from '../core/types';
+import type { AISkill, Faction, TargetClass } from '../core/types';
 import type { Loadout } from '../data/schema';
 import type { CastId, CastMember } from './cast';
 
@@ -177,6 +177,8 @@ export interface MissionResult {
   score: number;
   timeSec: number;
   kills: KillEntry[];
+  /** 표적 분류별 격추 수 (weapon = 미사일 요격) */
+  killsByClass: Record<TargetClass, number>;
   totalKills: number;
   /** 미사일/폭탄 발사 수 */
   shotsFired: number;
@@ -429,7 +431,8 @@ export interface MissionContext {
   dialogue(lines: readonly DialogueLine[], opts?: { delay?: number; gap?: number; then?: () => void }): TimerHandle;
 
   // 목표
-  objective(id: string, text: string, opts?: ObjectiveOptions): ObjectiveHandle;
+  /** 목표 생성 (같은 id 면 문구만 갱신). 세 번째 인자는 옵션 또는 primary 여부 */
+  objective(id: string, text: string, opts?: ObjectiveOptions | boolean): ObjectiveHandle;
   getObjective(id: string): ObjectiveHandle | null;
 
   // 시간/조건

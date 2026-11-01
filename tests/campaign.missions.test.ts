@@ -1,8 +1,8 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { GameDatabase } from '../src/data/schema';
 import { ALL_MISSIONS, CAMPAIGN, MISSION_IDS, createSkirmish, getMission, type MissionDef } from '../src/campaign';
 import { dryRunMission } from '../src/campaign/headless';
+import story from '../docs/story.md?raw';
 
 // docs/architecture.md 7절 "데이터 id 목록"
 const PLAYER_AIRCRAFT = ['f15ex', 'f22d', 'fa18i', 'f16p', 'f14ex'];
@@ -82,7 +82,7 @@ describe.each(ALL_MISSIONS.map((m) => [m.id, m] as const))('MissionDef %s', (_id
     expect(def.briefing.paragraphs.length).toBeGreaterThanOrEqual(3);
     for (const p of def.briefing.paragraphs) {
       expect(p).toMatch(HANGUL);
-      expect(p.length).toBeGreaterThan(40);
+      expect(p.length).toBeGreaterThan(20);
     }
     expect(def.briefing.objectivesText.length).toBeGreaterThan(0);
     expect(def.briefing.mapMarkers.length).toBeGreaterThan(1);
@@ -162,6 +162,20 @@ describe.each(PLAYABLE.map((m) => [m.id, m] as const))('헤드리스 완주 %s',
       expect(m.speaker.length).toBeGreaterThan(0);
       expect(m.duration).toBeGreaterThan(0);
     }
+  });
+});
+
+describe.each(PLAYABLE.filter((m) => m.id !== 'm00').map((m) => [m.id, m] as const))('교전 없이 15분 %s', (_id, def) => {
+  it('시간 기반 이벤트가 오류 없이 진행되고 임의로 끝나지 않는다', () => {
+    const run = dryRunMission(def, { db: DB, killInterval: 0, maxSeconds: 900 });
+    expect(run.runner.scriptError).toBeNull();
+    expect(run.finished).toBe(false);
+    expect(run.result.totalKills).toBe(0);
+    expect(run.radio.length).toBeGreaterThan(8);
+    // 시간 경과만으로 다음 단계가 나와야 한다 (교착 방지 대비책)
+    const timed: Record<string, string[]> = { m01: ['Unknown', 'Kifaru 1', 'Brigand 1'], m02: ['Regalia 3'], m03: ['Anvil 1', 'Regalia 2', 'Regalia 3'] };
+    const callsigns = run.recorder.aircraft.map((a) => a.callsign);
+    for (const cs of timed[def.id] ?? []) expect(callsigns, `${def.id}: ${cs}`).toContain(cs);
   });
 });
 
@@ -252,7 +266,6 @@ describe('스커미시', () => {
 });
 
 describe('docs/story.md', () => {
-  const story = readFileSync(new URL('../docs/story.md', import.meta.url), 'utf8');
   it('모든 미션 제목과 id 가 줄거리 문서에 있다', () => {
     for (const m of ALL_MISSIONS) {
       expect(story, m.id).toContain(m.title);

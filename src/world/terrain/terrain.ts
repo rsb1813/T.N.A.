@@ -435,7 +435,7 @@ export class Terrain implements TerrainService {
       const n = ns.fbm(x / 6500 - 71, z / 6500 + 5, 3) * 0.75 + ns.noise(x / 1400 + 9, z / 1400 - 3) * 0.25;
       forest = sstep(this.forestT, this.forestT + 0.16, n + (moisture - 0.5) * 0.25);
       forest *= sstep(2, 9, h) * (1 - sstep(b.treeLine - 150, b.treeLine + 120, h)) * (1 - sstep(0.36, 0.55, slope));
-      forest *= (1 - urban) * (1 - flat);
+      forest *= (1 - urban) * (1 - sstep(0.55, 0.95, flat));
     }
     let fields = 0;
     if (b.fieldCover > 0) {
@@ -446,8 +446,12 @@ export class Terrain implements TerrainService {
     let scorch = 0;
     if (b.id === 'wasteland') {
       const q = this.craterProximity(x, z);
-      const blot = sstep(0.25, 0.6, ns.fbm(x / 5000 - 7, z / 5000 + 31, 3));
-      scorch = Math.max(1 - sstep(0.7, 2.6, q), blot * 0.6);
+      const streak = 0.5 + 0.5 * ns.noise(x / 260 + 4.1, z / 260 - 2.2);
+      // dark glassed bowl, pale rim, burnt radial ejecta fading out to ~2.4 radii
+      const bowl = 1 - sstep(0.55, 0.95, q);
+      const ejecta = (1 - sstep(1.15, 2.4, q)) * sstep(0.95, 1.2, q) * (0.35 + 0.65 * streak);
+      const blot = sstep(0.3, 0.65, ns.fbm(x / 4200 - 7, z / 4200 + 31, 3)) * (0.4 + 0.4 * streak);
+      scorch = Math.max(bowl * 0.95, ejecta * 0.7, blot * 0.55);
     }
     out.forest = forest;
     out.fields = fields;
@@ -465,7 +469,7 @@ export class Terrain implements TerrainService {
     for (const f of opts.flatten ?? []) {
       const r = Math.max(50, f.radius);
       // earlier zones shape the ground a later zone flattens to
-      const target = f.height ?? Math.max(4, this.composeHeight(f.x, f.z, zones, null));
+      const target = f.height ?? Math.max(10, this.composeHeight(f.x, f.z, zones, null));
       zones.push({ x: f.x, z: f.z, radius: r, height: target, blend: Math.max(900, r * 0.9) });
     }
     return zones;
@@ -642,7 +646,7 @@ export class Terrain implements TerrainService {
         const broad = L[2];
         const rm = sstep(0.1, 0.55, L[3]);
         const range = rm > 0 ? Math.pow(n3.ridged(wx / 15000, wz / 15000, 5), 2) * 1100 * rm : 0;
-        let h = 210 + 230 * broad + 170 * n2.fbm(wx / 4600, wz / 4600, 5) * sstep(-0.4, 0.5, broad) + range;
+        let h = 210 + 300 * broad + 260 * n2.fbm(wx / 4600, wz / 4600, 5) * sstep(-0.5, 0.5, broad) + range;
         h = 210 + (h - 210) * relief;
         return this.carveRivers(wx, wz, h, 0.1, 38);
       }
@@ -663,7 +667,7 @@ export class Terrain implements TerrainService {
         return h > 0 ? h * relief : h;
       }
       case 'wasteland': {
-        let h = 230 + 190 * L[2] + 95 * n2.fbm(wx / 5200, wz / 5200, 4);
+        let h = 230 + 230 * L[2] + 150 * n2.fbm(wx / 5200, wz / 5200, 4);
         h = 230 + (h - 230) * relief;
         h += this.craterOffset(x, z);
         return this.carveRivers(wx, wz, h, 0.07, 30);

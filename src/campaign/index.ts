@@ -43,5 +43,7 @@ export {
   type MissionRewardSummary,
 } from './save';
 export * from './scoring';
-export { resolvePresetId, emptyLoadout, pickWeapon, PRESET_INTENTS, type PresetIntent } from './presets';
+export { resolvePresetId, pickWeapon, PRESET_INTENTS, type PresetIntent } from './presets';
 export { samSite, airfield, convoy, fleet, nearestAlive, type SamSystem, type SamSite, type Airfield } from './compose';
+// 헤드리스 점검 도구 (테스트/샌드박스/통합 전 스크립트 완주 확인)
+export { dryRunMission, createHeadlessSim, type DryRunOptions, type DryRunResult } from './headless';

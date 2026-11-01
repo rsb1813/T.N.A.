@@ -5,7 +5,7 @@
 //   runner.start();          // sim.services.mission = runner, def.script(ctx) 실행
 //   sim.events.on('missionEnded', () => showDebrief(runner.result()));
 import * as THREE from 'three';
-import { isAircraft, isMissile, type AircraftLike } from '../core/contracts';
+import { isMissile, type AircraftLike } from '../core/contracts';
 import type { Entity } from '../core/entity';
 import type { System } from '../core/game';
 import { headingToDir } from '../core/math';
@@ -13,7 +13,7 @@ import type { Rng } from '../core/rng';
 import type { AircraftSpawn, GroundSpawn, MissionService, MissionState, ObjectiveState, RadioMessage } from '../core/services';
 import { DIFFICULTY_TABLE } from '../core/settings';
 import type { GameEvents, Sim } from '../core/sim';
-import type { AISkill, Faction } from '../core/types';
+import type { AISkill, Faction, TargetClass } from '../core/types';
 import type { Loadout } from '../data/schema';
 import { CAST, findCast, type CastMember } from './cast';
 import type {
@@ -302,6 +302,7 @@ export class MissionRunner implements MissionService, System {
 
   // 통계
   private readonly killMap = new Map<string, KillEntry>();
+  private readonly killsByClass: Record<TargetClass, number> = { air: 0, ground: 0, sea: 0, structure: 0, weapon: 0 };
   private totalKills = 0;
   private killScoreSum = 0;
   private objectiveScore = 0;
@@ -457,7 +458,8 @@ export class MissionRunner implements MissionService, System {
       rank,
       score,
       timeSec: t,
-      kills: [...this.killMap.values()].sort((a, b) => b.score - a.score),
+      kills: [...this.killMap.values()].sort((a, b) => b.score - a.score).map((k) => ({ ...k })),
+      killsByClass: { ...this.killsByClass },
       totalKills: this.totalKills,
       shotsFired: this.shotsFired,
       hits: this.hits,
@@ -478,7 +480,8 @@ export class MissionRunner implements MissionService, System {
     s.timeLeft = this.def.timeLimit != null ? Math.max(0, this.def.timeLimit - s.elapsed) : null;
     s.kills = this.totalKills;
     if (!this.decided) {
-      const extra = [...this.extraScore.values()].reduce((a, b) => a + b, 0);
+      let extra = 0;
+      for (const v of this.extraScore.values()) extra += v;
       s.score = Math.max(0, this.killScoreSum + this.objectiveScore + extra - this.neutralKills * NEUTRAL_KILL_PENALTY);
     }
   }
@@ -750,6 +753,7 @@ export class MissionRunner implements MissionService, System {
       k.score += pts;
     } else this.killMap.set(name, { name, count: 1, score: pts });
     this.killScoreSum += pts;
+    this.killsByClass[e.targetClass]++;
     if (e.kind !== 'missile') this.totalKills++;
   }
 
@@ -807,7 +811,8 @@ export class MissionRunner implements MissionService, System {
 
   // ------------------------------------------------------------ 목표
 
-  objective(id: string, text: string, opts: ObjectiveOptions = {}): ObjectiveHandle {
+  objective(id: string, text: string, optsOrPrimary: ObjectiveOptions | boolean = {}): ObjectiveHandle {
+    const opts: ObjectiveOptions = typeof optsOrPrimary === 'boolean' ? { primary: optsOrPrimary } : optsOrPrimary;
     const existing = this.objectives.find((o) => o.state.id === id);
     if (existing) {
       existing.state.text = text;

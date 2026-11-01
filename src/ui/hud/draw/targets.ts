@@ -7,7 +7,7 @@ import type { WeaponDef } from '../../../data/schema';
 import { HUD_COLORS, monoFont, sansFont, blink } from '../style';
 import { edgeArrow, makeScreenPoint, type EdgeArrow } from '../projection';
 import { aspectInfo, closureRate, markerShape, type AspectInfo, type MarkerShape } from '../targeting';
-import { formatAspect, formatRange, formatSigned, formatThousands, speedIn } from '../units';
+import { distanceLabel, formatAspect, formatRange, formatSigned, formatThousands, speedIn } from '../units';
 import { ballisticBodyOf, computeGunLead, gunStreamPoint, isUnguidedBomb, predictBombImpact, type BallisticBody } from '../gunnery';
 import { POPUP_LIFETIME, type EventFeed } from '../feed';
 import type { HudFrame } from '../frame';
@@ -27,7 +27,7 @@ const _impact = new THREE.Vector3();
 const UNKNOWN = 'UNK';
 /** 지상 표적 라벨을 붙이는 거리 (m) */
 const GROUND_LABEL_RANGE = 9000;
-const AIR_LABEL_RANGE = 45_000;
+const AIR_LABEL_RANGE = 120_000;
 /** 미탐지 미션 표적을 시각 정보로 표시하는 거리 (m) */
 const VISUAL_TARGET_RANGE = 15_000;
 const FRIENDLY_SHOW_RANGE = 40_000;
@@ -129,7 +129,8 @@ function drawMarker(
   const name = identified ? (friendly ? e.label : e.name) : UNKNOWN;
   ctx.fillStyle = color;
   ctx.font = monoFont(11 * s, 600);
-  const top = y - r - (shape === 'box' ? 4 : 7) * s;
+  // 지정 표적은 락 브래킷(최대 반폭 r + 10s) 바깥에 이름을 둔다
+  const top = y - r - (designated ? 16 : shape === 'box' ? 4 : 7) * s;
   if (isTarget) {
     ctx.font = monoFont(11 * s, 700);
     text(ctx, 'TGT', x, top - 13 * s, 'center', 'bottom');
@@ -177,7 +178,7 @@ export function drawDesignatedTarget(f: HudFrame): void {
   const x = _sp.x;
   const y = _sp.y;
   const r = markerRadius(f, entity, _sp.depth);
-  const base = r + 7 * s;
+  const base = r + 10 * s;
   let half = base;
   let alpha = 1;
   if (lock.status === 'searching') {
@@ -190,9 +191,9 @@ export function drawDesignatedTarget(f: HudFrame): void {
   if (lock.status !== 'none') {
     ctx.globalAlpha = alpha;
     ctx.beginPath();
-    addBrackets(ctx, x, y, half, half, Math.max(6 * s, half * 0.42));
+    addBrackets(ctx, x, y, half, half, Math.max(7 * s, half * 0.45));
     ctx.strokeStyle = lockCol;
-    ctx.lineWidth = (locked ? 3 : 2) * s;
+    ctx.lineWidth = (locked ? 3.2 : 2.2) * s;
     ctx.stroke();
     ctx.globalAlpha = 1;
     if (locking) {
@@ -210,27 +211,44 @@ export function drawDesignatedTarget(f: HudFrame): void {
     if (blink(time, 3, 0.75)) text(ctx, 'LOCK', x, y + half + 6 * s, 'center', 'top');
   }
 
-  // 정보 블록 (오른쪽)
-  const ix = x + half + 10 * s;
-  let iy = y - half + 2 * s;
-  const lh = 14 * s;
-  ctx.font = monoFont(13 * s, 700);
-  ctx.fillStyle = baseCol;
-  text(ctx, formatRange(dist, units), ix, iy, 'left', 'top');
-  iy += lh + 1 * s;
-  ctx.font = monoFont(11 * s, 600);
+  // 정보 블록: 오른쪽 (화면 밖으로 나가면 왼쪽), 반투명 배경
   const vc = closureRate(p.position, p.velocity, pos, vel);
-  text(ctx, `Vc ${formatSigned(speedIn(vc, units))}`, ix, iy, 'left', 'top');
-  iy += lh;
+  const l0 = `${formatRange(dist, units)} ${distanceLabel(units)}`;
+  const l1 = `Vc ${formatSigned(speedIn(vc, units))}`;
+  let l2 = '';
   if (entity.targetClass === 'air') {
     aspectInfo(p.position, pos, vel, _aspect);
-    text(ctx, `ASP ${formatAspect(_aspect.deg, _aspect.side)}`, ix, iy, 'left', 'top');
-    iy += lh;
+    l2 = `ASP ${formatAspect(_aspect.deg, _aspect.side)}`;
   }
   const om = f.ownMissiles;
-  if (om.count > 0) {
+  const l3 = om.count > 0 ? (om.timeToGo >= 0 ? `MSL ${om.count} · ${Math.ceil(om.timeToGo)}s` : `MSL ${om.count}`) : '';
+  const bigFont = monoFont(13 * s, 700);
+  const smallFont = monoFont(11 * s, 600);
+  const m = f.metrics;
+  const bw = Math.max(m.width(ctx, bigFont, l0), m.width(ctx, smallFont, l1), l2 ? m.width(ctx, smallFont, l2) : 0, l3 ? m.width(ctx, smallFont, l3) : 0) + 10 * s;
+  const lh = 14 * s;
+  const bh = 6 * s + lh + 1 * s + lh * ((l2 ? 1 : 0) + (l3 ? 1 : 0) + 1);
+  let ix = x + half + 9 * s;
+  if (ix + bw > f.W - 6 * s) ix = x - half - 9 * s - bw;
+  let iy = y - half;
+  ctx.fillStyle = 'rgba(3, 12, 8, 0.5)';
+  ctx.fillRect(ix, iy, bw, bh);
+  ix += 5 * s;
+  iy += 3 * s;
+  ctx.font = bigFont;
+  ctx.fillStyle = baseCol;
+  text(ctx, l0, ix, iy, 'left', 'top');
+  iy += lh + 1 * s;
+  ctx.font = smallFont;
+  text(ctx, l1, ix, iy, 'left', 'top');
+  iy += lh;
+  if (l2) {
+    text(ctx, l2, ix, iy, 'left', 'top');
+    iy += lh;
+  }
+  if (l3) {
     ctx.fillStyle = HUD_COLORS.text;
-    text(ctx, om.timeToGo >= 0 ? `MSL ${om.count} · ${Math.ceil(om.timeToGo)}s` : `MSL ${om.count}`, ix, iy, 'left', 'top');
+    text(ctx, l3, ix, iy, 'left', 'top');
   }
 }
 

@@ -181,6 +181,8 @@ export function createSkirmish(opts: SkirmishOptions): MissionDef {
   const expected = (total * 130 + groundScore + 600) * mult;
 
   const script = (ctx: MissionContext): void => {
+    // WON 은 기본 관계에서 NATO 와 중립이므로 명시적으로 적대화
+    ctx.setRelations('NATO', opts.enemyFaction, true);
     ctx.rearmZone(rearm, 4000);
     ctx.objective('air', `${FACTION_NAMES[opts.enemyFaction]} 항공기 ${total}기 격추`, { destroy: 'skirmish_air', required: total });
     if (opts.includeGround) {

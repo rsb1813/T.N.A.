@@ -153,6 +153,8 @@ export interface DryRunOptions {
   /** 이 엔티티를 플레이어가 격추시킬지 (기본: 플레이어에 적대적인 전부) */
   killFilter?: (e: Entity, sim: Sim) => boolean;
   runner?: MissionRunnerOptions;
+  /** 매 스텝 runner.fixedUpdate 직후 호출 */
+  onStep?: (runner: MissionRunner, sim: Sim) => void;
 }
 
 export interface DryRunResult {
@@ -173,7 +175,7 @@ export interface DryRunResult {
  */
 export function dryRunMission(def: MissionDef, opts: DryRunOptions = {}): DryRunResult {
   const { sim, rec } = createHeadlessSim({ db: opts.db, seed: opts.seed });
-  const runner = new MissionRunner(def, sim, opts.runner);
+  const runner = new MissionRunner(def, sim, { rearm: () => {}, ...opts.runner });
   runner.start();
   const step = opts.step ?? 0.1;
   const maxSeconds = opts.maxSeconds ?? 1800;
@@ -201,6 +203,7 @@ export function dryRunMission(def: MissionDef, opts: DryRunOptions = {}): DryRun
       }
     }
     runner.fixedUpdate(step, sim);
+    opts.onStep?.(runner, sim);
     sim.world.step(0, sim);
   }
   const uniq = (a: string[]) => [...new Set(a)];

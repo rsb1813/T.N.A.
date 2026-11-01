@@ -179,15 +179,18 @@ for (let i = 0; i <= 90 / LADDER_STEP; i++) LADDER_LABELS.push(`${i * LADDER_STE
 
 const ROLL_TICKS = [-60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60];
 
-/** 롤 눈금: 화면 아래쪽 호. 지시침은 지면 방향을 가리킨다 (오른쪽 롤 → 오른쪽으로 이동) */
+/**
+ * 롤 눈금: 화면 위쪽 호 (추적 시점에서 기체에 가리지 않게). 지시침은 하늘(천정) 방향을 가리킨다
+ * — 오른쪽 롤이면 하늘이 화면에서 반시계로 돌아가므로 왼쪽으로 이동.
+ */
 export function drawRollScale(f: HudFrame): void {
   const tel = f.tel;
   if (!tel) return;
   const { ctx, s, cx, cy } = f;
-  const R = 168 * s;
+  const R = 150 * s;
   ctx.beginPath();
   for (const t of ROLL_TICKS) {
-    const a = (90 + t) * DEG;
+    const a = (-90 + t) * DEG;
     const major = t === 0 || Math.abs(t) === 30 || Math.abs(t) === 60;
     const l = major ? 11 * s : 6 * s;
     const c = Math.cos(a);
@@ -200,7 +203,7 @@ export function drawRollScale(f: HudFrame): void {
 
   const roll = tel.rollDeg;
   const clamped = Math.max(-64, Math.min(64, roll));
-  const a = (90 - clamped) * DEG;
+  const a = (-90 - clamped) * DEG;
   const px = cx + Math.cos(a) * (R - 2 * s);
   const py = cy + Math.sin(a) * (R - 2 * s);
   ctx.beginPath();
@@ -209,7 +212,7 @@ export function drawRollScale(f: HudFrame): void {
   ctx.fill();
   if (Math.abs(roll) > 64) {
     ctx.font = monoFont(11 * s, 600);
-    text(ctx, `${Math.round(Math.abs(roll))}${roll > 0 ? 'R' : 'L'}`, px - Math.cos(a) * 14 * s, py - Math.sin(a) * 14 * s, 'center');
+    text(ctx, `${Math.round(Math.abs(roll))}${roll > 0 ? 'R' : 'L'}`, px - Math.cos(a) * 24 * s, py - Math.sin(a) * 24 * s, 'center');
   }
 }
 
