@@ -117,3 +117,24 @@ core 변경 요청은 없음. 아래는 다른 모듈이 알아야 할 가정/�
 - 브리핑: `def.briefing.{paragraphs, objectivesText, mapMarkers, threats, recommendation}`, `def.date/location/subtitle`, 맵 반경 `def.environment.mapRadius ?? 100000`. 막 목록 `CAMPAIGN.acts[].{title, subtitle, missions}`, 해금 `isMissionUnlocked(save, id, ALL_MISSIONS)`, 개발 중 표시 `def.available === false`.
 - 무전 자막 화자는 영문 TAC/콜사인 (`Magpie`, `Lantern`, `Sceptre`, `Lancet 1` …), `side` 로 색 구분. 등장인물 정보(한국어 이름·역할)는 `CAST` / `findCast(speaker)`.
 - 격납고 경제: `canBuy/purchase/isUnlocked(save, 'aircraft'|'weapons'|'modules', id, DB)`, 기체별 마지막 로드아웃 `rememberLoadout(save, loadout)` → `save.hangar[aircraftId]`.
+
+## ui/hud
+
+core 변경 없이 동작한다. 아래는 요청/가정.
+
+**요청 (core/contracts)**
+- `AircraftController` 에 선택 필드 `aimDirection?: THREE.Vector3` (월드 단위벡터) 와 `mouseAimActive?: boolean` 을 계약으로 올려 달라. 지금은 HUD 가 덕 타이핑으로 읽는다 (flight 메모의 PlayerController 필드명과 일치).
+
+**combat**
+- HUD 는 렌더 프레임마다 `avionics.lockState(stores.selectedDef(), sim)` 을 1회 호출하고 결과를 복사한다 (반환 객체 재사용 규칙 준수). `launchZone(lock.target ?? avionics.target.entity, sim)` 도 프레임마다 1회.
+- CCIP 탄착점은 HUD 자체 계산 (`ui/hud/gunnery.ts predictBombImpact`: 점질량, 항력 = cd0·(1 + 1.1·waveDragFactor(M)) · πd²/4, ISA 밀도, dt 0.1 s). combat 의 폭탄 엔티티가 다른 식을 쓰면 CCIP 가 어긋나므로, 가능하면 `src/combat/index.ts` 에 순수 함수 `predictBombImpact(pos, vel, def, heightAt, out) → time` 를 export 해 달라 — HUD 가 그걸로 바꾼다. 기관포 리드는 탄속 = 사수 속도 + 총구속도·조준방향, 중력 포함 (`computeGunLead`).
+- 'MISSED' 표시는 `weaponMissed` 의 weapon 이 플레이어가 쏜 것(`weaponLaunched` 로 기록했거나 `MissileLike.shooter === player`)일 때. 'HIT' 은 `damaged.info.source === player`.
+- 트랙 마커는 `Track.position/velocity` (센서가 아는 값) 로 그린다. `source === 'datalink'` 또는 `quality < 0.35` 이면 점선 상자.
+
+**campaign**
+- `sim.services.mission.markers`(MissionRunner.markers, `{x,z,label,kind,radius?}`) 가 있으면 미니맵에 그린다 (선택).
+- 격파 팝업의 점수는 `mission.state.score` 증가분을 1.5 s 안의 최근 격파에 붙인다 (점수 이벤트가 따로 없어서). 목표 알림은 `objectiveChanged` 때 상태가 바뀐 경우만 ('목표 달성'/'목표 실패'/'새 목표').
+- 트랙에 없는 미션 표적('target' 태그, 비아군)도 15 km 안이면 HUD 에 TGT 마커, 미니맵에는 거리 무관 속이 빈 기호로 표시한다 (정보 표적). 아군 항공기는 40 km 안이면 항상 표시.
+
+**game (통합)**
+- `new Hud(document.getElementById('ui')!)` → `game.addSystem(hud)` 를 **CameraRig 다음에** 등록 (같은 프레임 카메라로 투영). 메뉴/일시정지/킬캠 동안 `hud.setVisible(false)`. HUD 루트는 `pointer-events: none` (인라인) 이라 `#ui > *` 규칙과 충돌하지 않는다. 세션 종료 시 `hud.dispose()` (또는 game.clearSystems).

@@ -272,9 +272,10 @@ export function drawNotice(f: HudFrame, n: NoticeState | null): void {
   ctx.fillStyle = n.color;
   text(ctx, n.text, cx, y, 'center');
   if (n.sub) {
-    ctx.font = sansFont(12 * s, 500);
+    const subFont = sansFont(12 * s, 500);
+    ctx.font = subFont;
     ctx.fillStyle = HUD_COLORS.text;
-    text(ctx, f.metrics.truncate(ctx, ctx.font, n.sub, 520 * s), cx, y + 19 * s, 'center');
+    text(ctx, f.metrics.truncate(ctx, subFont, n.sub, 520 * s), cx, y + 19 * s, 'center');
   }
   ctx.globalAlpha = 1;
 }

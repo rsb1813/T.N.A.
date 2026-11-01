@@ -60,8 +60,10 @@ export function maxLevelMach(stats: DerivedStats, altitudeM: number, afterburner
     const q = 0.5 * _atm.rho * (m * _atm.speedOfSound) ** 2;
     if (W / (q * stats.wingArea) < 0.9 * effectiveAero(stats, m, opts.variableSweep).clMax) break;
   }
-  if (levelExcessThrust(stats, altitudeM, m, afterburner, opts) < 0) return 0;
   const step = 0.01;
+  // 최소 속도 부근(항력 곡선 뒷면)은 추력이 모자랄 수 있다 → 처음으로 잉여 추력이 생기는 속도부터
+  while (m < 1.0 && levelExcessThrust(stats, altitudeM, m, afterburner, opts) < 0) m += step;
+  if (levelExcessThrust(stats, altitudeM, m, afterburner, opts) < 0) return 0;
   while (m < 4 && levelExcessThrust(stats, altitudeM, m + step, afterburner, opts) >= 0) m += step;
   let lo = m;
   let hi = m + step;

@@ -73,7 +73,7 @@ export function drawWeaponPanel(f: HudFrame): void {
     ctx.fillStyle = col;
     ctx.font = monoFont(sel ? 14 * s : 13 * s, sel ? 800 : 600);
     text(ctx, sel ? '▶' : ' ', lx - 2 * s, y, 'left');
-    const label = f.metrics.truncate(ctx, ctx.font, g.def.id, pw - 92 * s);
+    const label = f.metrics.truncate(ctx, monoFont(sel ? 14 * s : 13 * s, sel ? 800 : 600), g.def.id, pw - 92 * s);
     text(ctx, label, lx + 14 * s, y, 'left');
     ctx.font = monoFont(14 * s, 800);
     text(ctx, `×${g.count}`, rx, y, 'right');
@@ -132,17 +132,18 @@ export function drawMissionPanel(f: HudFrame, state: MissionState | null, change
   const lx = x0 + pad + 4 * s;
   const rx = x0 + pw - pad;
   let y = y0 + pad + 9 * s;
-  ctx.font = sansFont(14 * s, 800);
-  ctx.fillStyle = HUD_COLORS.text;
-  const timeStr = state.timeLeft !== null ? formatClock(state.timeLeft) : formatClock(state.elapsed);
-  ctx.font = monoFont(15 * s, 700);
+  // 시간 (오른쪽) → 남은 폭에 제목
+  const timeStr = formatClock(state.timeLeft !== null ? state.timeLeft : state.elapsed);
+  const timeFont = monoFont(15 * s, 700);
   const timeLow = state.timeLeft !== null && state.timeLeft < 60;
+  ctx.font = timeFont;
   ctx.fillStyle = timeLow ? (blink(time, 2) ? HUD_COLORS.warn : HUD_COLORS.caution) : HUD_COLORS.main;
   text(ctx, timeStr, rx, y, 'right');
-  const timeW = f.metrics.width(ctx, ctx.font, timeStr);
-  ctx.font = sansFont(14 * s, 800);
+  const timeW = f.metrics.width(ctx, timeFont, timeStr);
+  const titleFont = sansFont(14 * s, 800);
+  ctx.font = titleFont;
   ctx.fillStyle = HUD_COLORS.text;
-  text(ctx, f.metrics.truncate(ctx, ctx.font, state.title, pw - pad * 2 - timeW - 60 * s), lx, y, 'left');
+  text(ctx, f.metrics.truncate(ctx, titleFont, state.title, pw - pad * 2 - timeW - 60 * s), lx, y, 'left');
   ctx.font = sansFont(10 * s, 600);
   ctx.fillStyle = HUD_COLORS.mainDim;
   text(ctx, state.timeLeft !== null ? '남은 시간' : '경과', rx - timeW - 6 * s, y + 1 * s, 'right');
@@ -207,13 +208,15 @@ function drawObjective(f: HudFrame, o: ObjectiveState, lx: number, rx: number, y
 
   let prog = '';
   if (o.progress && o.progress.total > 1) prog = `${o.progress.current}/${o.progress.total}`;
-  ctx.font = monoFont(12 * s, 700);
+  const progFont = monoFont(12 * s, 700);
+  ctx.font = progFont;
   ctx.fillStyle = col;
   if (prog) text(ctx, prog, rx, y, 'right');
-  const progW = prog ? f.metrics.width(ctx, ctx.font, prog) + 8 * s : 0;
-  ctx.font = sansFont(12 * s, o.primary ? 600 : 500);
+  const progW = prog ? f.metrics.width(ctx, progFont, prog) + 8 * s : 0;
+  const labelFont = sansFont(12 * s, o.primary ? 600 : 500);
+  ctx.font = labelFont;
   const label = o.primary ? o.text : `(보조) ${o.text}`;
-  text(ctx, f.metrics.truncate(ctx, ctx.font, label, rx - lx - 16 * s - progW), lx + 16 * s, y, 'left');
+  text(ctx, f.metrics.truncate(ctx, labelFont, label, rx - lx - 16 * s - progW), lx + 16 * s, y, 'left');
 }
 
 /** 피해 패널: 기체 손상률 + 부위(엔진/날개/조종) + 연료 누출/화재 */

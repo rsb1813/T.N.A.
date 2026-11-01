@@ -83,12 +83,12 @@ export function drawPitchLadder(f: HudFrame): void {
   ctx.font = monoFont(11 * s, 500);
   ctx.fillStyle = HUD_COLORS.main;
 
-  // 점선 경로(음의 피치)는 따로 모은다
-  const dashedStart = ladderPass(f, hx, hz, rx, rz, gap, half, tick, horizonHalf, clipW, clipH, false);
+  // 1차: 수평선·양의 피치(실선), 2차: 음의 피치(점선)
+  const hasNegative = ladderPass(f, hx, hz, rx, rz, gap, half, tick, horizonHalf, clipW, clipH, false);
   ctx.strokeStyle = HUD_COLORS.main;
   ctx.lineWidth = 1.4 * s;
   ctx.stroke();
-  if (dashedStart) {
+  if (hasNegative) {
     ladderPass(f, hx, hz, rx, rz, gap, half, tick, horizonHalf, clipW, clipH, true);
     ctx.setLineDash([7 * s, 5 * s]);
     ctx.stroke();

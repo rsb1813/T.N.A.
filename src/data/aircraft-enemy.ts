@@ -98,7 +98,7 @@ const su27s: AircraftDef = {
   presets: [
     { id: 'air', name: '제공 (R-27)', description: 'R-27ER/ET 6 발 + R-73M 4 발.', modules: {}, stations: FLANKER_AIR },
     { id: 'r77', name: '제공 (R-77)', description: 'R-77 6 발 + R-27ER 2 발 + R-73M 2 발.', modules: {}, stations: FLANKER_R77 },
-    { id: 'bomb', name: '폭격', description: 'FAB-500 4 발, 자위용 R-27ER·R-73M.', modules: {}, stations: FLANKER_BOMB },
+    { id: 'strike', name: '폭격', description: 'FAB-500 4 발, 자위용 R-27ER·R-73M.', modules: {}, stations: FLANKER_BOMB },
   ],
   unlock: FREE,
 };
@@ -242,7 +242,7 @@ const mig29s: AircraftDef = {
   presets: [
     { id: 'air', name: '제공', description: 'R-77 2 발 + R-27ER 2 발 + R-73M 2 발, 중앙 탱크.', modules: {}, stations: { ...both('L1', 'R1', ld('R-73M')), ...both('L2', 'R2', ld('R-77')), ...both('L3', 'R3', ld('R-27ER')), C: ld('PTB-1500') } },
     { id: 'dogfight', name: '근접전', description: 'R-73M 4 발 + R-77 2 발. 가볍게 근접전.', modules: {}, stations: { ...both('L1', 'R1', ld('R-73M')), ...both('L2', 'R2', ld('R-73M')), ...both('L3', 'R3', ld('R-77')) } },
-    { id: 'bomb', name: '폭격', description: 'FAB-500 2 발 + R-73M 2 발, 중앙 탱크.', modules: {}, stations: { ...both('L1', 'R1', ld('R-73M')), ...both('L3', 'R3', ld('FAB-500')), C: ld('PTB-1500') } },
+    { id: 'strike', name: '폭격', description: 'FAB-500 2 발 + R-73M 2 발, 중앙 탱크.', modules: {}, stations: { ...both('L1', 'R1', ld('R-73M')), ...both('L3', 'R3', ld('FAB-500')), C: ld('PTB-1500') } },
   ],
   unlock: FREE,
 };
@@ -253,14 +253,14 @@ const mig31bm: AircraftDef = {
   faction: 'WARSAW',
   playable: false,
   role: 'interceptor',
-  description: '마하 2.8 장거리 요격기. Zaslon-M 과 R-33S/R-37 로 초원거리에서 공격하지만 기동성은 낮다.',
+  description: '마하 2.8 장거리 요격기. Zaslon-M 과 R-33S/R-37 로 초원거리에서 공격하지만 기동성은 낮다 (BM 개수로 G 한계 5.7).',
   model: 'mig31',
   crew: 2,
   dimensions: { length: 22.69, span: 13.46, height: 6.15 },
   mass: { empty: 21820, internalFuel: 16350, maxTakeoff: 46200 },
-  aero: { wingArea: 61.6, cd0: 0.0165, k: 0.134, clAlpha: 3.2, clMax: 1.4, aoaMaxDeg: 20, waveDragRise: 0.0165 },
+  aero: { wingArea: 61.6, cd0: 0.0165, k: 0.129, clAlpha: 3.2, clMax: 1.4, aoaMaxDeg: 20, waveDragRise: 0.0165 },
   engine: { name: 'D-30F6', count: 2, dryThrustKN: 93, abThrustKN: 152, tsfcDry: 73, tsfcAB: 192, spoolTime: 5.0 },
-  limits: { gMax: 5.6, gMin: -2, maxMach: 2.83, rollRateDeg: 120, pitchRateDeg: 18, yawRateDeg: 10, cornerSpeed: 280, maxIas: 417 },
+  limits: { gMax: 5.7, gMin: -2, maxMach: 2.83, rollRateDeg: 120, pitchRateDeg: 18, yawRateDeg: 10, cornerSpeed: 280, maxIas: 417 },
   signature: { rcs: 20, ir: 2.0 },
   gun: { weaponId: 'GSh-6-23', rounds: 260 },
   stations: [
@@ -274,7 +274,7 @@ const mig31bm: AircraftDef = {
   modules: moduleTable({ radar: ['Zaslon-M'], irst: ['8TK'], rwr: ['L150'], cms: ['BVP-30-26M'], datalink: ['APD-518'] }),
   presets: [
     {
-      id: 'intercept',
+      id: 'air',
       name: '요격 (R-33S)',
       description: 'R-33S 4 발 + R-73M 2 발, 날개 탱크.',
       modules: {},
@@ -315,7 +315,7 @@ const su47: AircraftDef = {
   ],
   modules: moduleTable({ radar: ['N011M'], irst: ['OLS-35'], rwr: ['L150'], maw: ['Mak-UFM'], ew: ['L175V'], cms: ['UV-30MK'], datalink: ['TKS-2'], helmet: ['Sura-K'] }),
   presets: [
-    { id: 'clean', name: '내부 무장', description: '무장창에 R-77-1 6 발 + 날개끝 R-73M 2 발.', modules: {}, stations: { BAY_C: ld('R-77-1', 6), ...both('L1', 'R1', ld('R-73M')) } },
+    { id: 'air', name: '내부 무장', description: '무장창에 R-77-1 6 발 + 날개끝 R-73M 2 발.', modules: {}, stations: { BAY_C: ld('R-77-1', 6), ...both('L1', 'R1', ld('R-73M')) } },
     { id: 'heavy', name: '중무장', description: '무장창 R-77-1 6 발 + R-73M 4 발 + R-27ER 2 발.', modules: {}, stations: { BAY_C: ld('R-77-1', 6), ...both('L1', 'R1', ld('R-73M')), ...both('L2', 'R2', ld('R-73M')), ...both('L3', 'R3', ld('R-27ER')) } },
   ],
   unlock: FREE,
@@ -332,7 +332,7 @@ const tu22m3: AircraftDef = {
   crew: 2,
   dimensions: { length: 42.46, span: 34.28, height: 11.05 },
   mass: { empty: 58000, internalFuel: 53550, maxTakeoff: 126400 },
-  aero: { wingArea: 183.6, cd0: 0.0141, k: 0.07, clAlpha: 4.5, clMax: 1.4, aoaMaxDeg: 18, waveDragRise: 0.0211 },
+  aero: { wingArea: 183.6, cd0: 0.0139, k: 0.07, clAlpha: 4.5, clMax: 1.4, aoaMaxDeg: 18, waveDragRise: 0.0208 },
   engine: { name: 'NK-25', count: 2, dryThrustKN: 147, abThrustKN: 245, tsfcDry: 76, tsfcAB: 210, spoolTime: 6.0 },
   limits: { gMax: 2.5, gMin: -1, maxMach: 1.88, rollRateDeg: 40, pitchRateDeg: 8, yawRateDeg: 5, cornerSpeed: 300, maxIas: 292 },
   signature: { rcs: 50, ir: 4.0 },
@@ -344,7 +344,7 @@ const tu22m3: AircraftDef = {
   modules: moduleTable({ radar: ['PN-A'], rwr: ['L150'], maw: ['Mak-UFM'], ew: ['Ocean'], cms: ['APP-50'], datalink: ['TKS-2'] }),
   presets: [
     { id: 'antiship', name: '대함 (Kh-22)', description: 'Kh-22 3 발.', modules: {}, stations: { BAY_C: ld('Kh-22'), ...both('L1', 'R1', ld('Kh-22')) } },
-    { id: 'bomb', name: '융단 폭격', description: 'FAB-500 24 발.', modules: {}, stations: { BAY_C: ld('FAB-500', 24) } },
+    { id: 'strike', name: '융단 폭격', description: 'FAB-500 24 발.', modules: {}, stations: { BAY_C: ld('FAB-500', 24) } },
   ],
   variableSweep: { minDeg: 20, maxDeg: 65 },
   unlock: FREE,
@@ -361,9 +361,10 @@ const a50: AircraftDef = {
   crew: 2,
   dimensions: { length: 49.59, span: 50.5, height: 14.76 },
   mass: { empty: 75000, internalFuel: 64000, maxTakeoff: 190000 },
-  aero: { wingArea: 300, cd0: 0.025, k: 0.05, clAlpha: 5.0, clMax: 1.4, aoaMaxDeg: 15, waveDragRise: 0.03 },
-  // 애프터버너 없음: abThrustKN = dryThrustKN
-  engine: { name: 'D-30KP', count: 4, dryThrustKN: 117.7, abThrustKN: 117.7, tsfcDry: 70, tsfcAB: 70, spoolTime: 7.0 },
+  aero: { wingArea: 300, cd0: 0.0364, k: 0.08, clAlpha: 5.0, clMax: 1.4, aoaMaxDeg: 15, waveDragRise: 0.0182 },
+  // 애프터버너 없음: abThrustKN = dryThrustKN. 해면 정격 117.7 kN 이지만 aero.ts 의 저바이패스 감률(σ^0.8)로는
+  // 고고도 추력이 과대해지므로 순항 고도 추력이 실기와 맞도록 80 kN 유효값을 쓴다.
+  engine: { name: 'D-30KP', count: 4, dryThrustKN: 80, abThrustKN: 80, tsfcDry: 70, tsfcAB: 70, spoolTime: 7.0 },
   limits: { gMax: 2.5, gMin: -1, maxMach: 0.8, rollRateDeg: 30, pitchRateDeg: 6, yawRateDeg: 4, cornerSpeed: 200, maxIas: 167 },
   signature: { rcs: 100, ir: 3.0 },
   gun: null,
@@ -454,7 +455,7 @@ const tornado_f3: AircraftDef = {
   role: 'interceptor',
   description: '대영제국 방공 요격기. 저공 고속 돌진과 Skyflash 4 발, 대신 선회전은 약하다.',
   mass: { empty: 14500, internalFuel: 5800, maxTakeoff: 27986 },
-  aero: { wingArea: 26.6, cd0: 0.0257, k: 0.074, clAlpha: 4.5, clMax: 1.8, aoaMaxDeg: 25, waveDragRise: 0.0308 },
+  aero: { wingArea: 26.6, cd0: 0.0256, k: 0.066, clAlpha: 4.5, clMax: 1.8, aoaMaxDeg: 25, waveDragRise: 0.0308 },
   engine: { name: 'RB199 Mk104', count: 2, dryThrustKN: 40.5, abThrustKN: 73.5, tsfcDry: 65, tsfcAB: 220, spoolTime: 3.5 },
   limits: { gMax: 7.5, gMin: -3, maxMach: 2.2, rollRateDeg: 180, pitchRateDeg: 25, yawRateDeg: 15, cornerSpeed: 260, maxIas: 412 },
   signature: { rcs: 8, ir: 1.1 },
@@ -467,7 +468,7 @@ const tornado_f3: AircraftDef = {
   ],
   modules: moduleTable({ radar: ['AI.24'], rwr: ['ARI 18241'], cms: ['BOL'], datalink: ['MIDS-LVT'] }),
   presets: [
-    { id: 'cap', name: '방공 초계', description: 'Skyflash 4 발 + ASRAAM 4 발, 날개 탱크.', modules: {}, stations: { ...both('FL1', 'FR1', ld('Skyflash')), ...both('FL2', 'FR2', ld('Skyflash')), ...both('L1', 'R1', ld('ASRAAM', 2)), ...both('L2', 'R2', ld('TANK-2250L')) } },
+    { id: 'air', name: '방공 초계', description: 'Skyflash 4 발 + ASRAAM 4 발, 날개 탱크.', modules: {}, stations: { ...both('FL1', 'FR1', ld('Skyflash')), ...both('FL2', 'FR2', ld('Skyflash')), ...both('L1', 'R1', ld('ASRAAM', 2)), ...both('L2', 'R2', ld('TANK-2250L')) } },
     { id: 'qra', name: '긴급 요격', description: 'Skyflash 4 발 + ASRAAM 4 발, 탱크 없음.', modules: {}, stations: { ...both('FL1', 'FR1', ld('Skyflash')), ...both('FL2', 'FR2', ld('Skyflash')), ...both('L1', 'R1', ld('ASRAAM', 2)) } },
   ],
 };
@@ -482,22 +483,23 @@ const tornado_ids: AircraftDef = {
   description: '저공 침투 공격기. 지형추적 레이더로 낮게 날아 Storm Shadow·ALARM·Brimstone 을 쏜다.',
   dimensions: { length: 16.72, span: 13.91, height: 5.95 },
   mass: { empty: 13890, internalFuel: 5090, maxTakeoff: 28000 },
-  aero: { wingArea: 26.6, cd0: 0.027, k: 0.093, clAlpha: 4.5, clMax: 1.8, aoaMaxDeg: 25, waveDragRise: 0.0378 },
+  aero: { wingArea: 26.6, cd0: 0.0237, k: 0.082, clAlpha: 4.5, clMax: 1.8, aoaMaxDeg: 25, waveDragRise: 0.0331 },
   engine: { name: 'RB199 Mk103', count: 2, dryThrustKN: 40.5, abThrustKN: 71.5, tsfcDry: 65, tsfcAB: 220, spoolTime: 3.5 },
   limits: { gMax: 7.5, gMin: -3, maxMach: 2.2, rollRateDeg: 180, pitchRateDeg: 25, yawRateDeg: 15, cornerSpeed: 260, maxIas: 412 },
   signature: { rcs: 8, ir: 1.1 },
   gun: { weaponId: 'BK-27', rounds: 360 },
   stations: [
     ...pair('L1', 'R1', '외측 날개 파일런', [-3.6, -0.6, 0.8], { maxMassKg: 600, allowed: ['arm', 'pod'] }),
-    ...pair('L2', 'R2', '내측 날개 파일런', [-2.4, -0.8, 0.6], { maxMassKg: 2100, allowed: ['tank', 'arm', 'agm', ...BOMBS], limits: { Brimstone: 3 } }),
+    ...pair('L2', 'R2', '내측 날개 파일런', [-2.4, -0.8, 0.6], { maxMassKg: 2100, allowed: ['tank', 'arm', 'agm', 'ashm', ...BOMBS], limits: { Brimstone: 3 } }),
     ...pair('L3', 'R3', '파일런 숄더 레일', [-2.1, -0.7, 0.6], { maxMassKg: 100, allowed: ['aam_ir'] }),
-    ...pair('FL', 'FR', '동체 숄더', [-0.8, -1.2, 0.0], { maxMassKg: 1500, allowed: ['agm', 'arm', 'tank', ...BOMBS], limits: { Brimstone: 3 } }),
+    ...pair('FL', 'FR', '동체 숄더', [-0.8, -1.2, 0.0], { maxMassKg: 1500, allowed: ['agm', 'arm', 'ashm', 'tank', ...BOMBS], limits: { Brimstone: 3 } }),
     station('C', '동체 중앙', [0, -1.3, 0.0], { maxMassKg: 1000, allowed: BOMBS }),
   ],
   modules: moduleTable({ radar: ['GMR'], rwr: ['ARI 18241'], ew: ['Sky Shadow'], cms: ['BOL'], datalink: ['MIDS-LVT'] }),
   presets: [
     { id: 'strike', name: '장거리 타격', description: 'Storm Shadow 2 발, 날개 탱크, ASRAAM 2 발.', modules: {}, stations: { ...both('FL', 'FR', ld('Storm Shadow')), ...both('L2', 'R2', ld('TANK-2250L')), ...both('L3', 'R3', ld('ASRAAM')) } },
     { id: 'sead', name: 'SEAD', description: 'ALARM 3 발로 방공망 제압.', modules: {}, stations: { ...both('FL', 'FR', ld('ALARM')), R1: ld('ALARM'), ...both('L2', 'R2', ld('TANK-2250L')), ...both('L3', 'R3', ld('ASRAAM')) } },
+    { id: 'antiship', name: '대함', description: 'Sea Eagle 2 발, 날개 탱크, ASRAAM 2 발.', modules: {}, stations: { ...both('FL', 'FR', ld('Sea Eagle')), ...both('L2', 'R2', ld('TANK-2250L')), ...both('L3', 'R3', ld('ASRAAM')) } },
     { id: 'cas', name: '대기갑', description: 'Brimstone 6 발로 기갑 부대 공격.', modules: {}, stations: { ...both('FL', 'FR', ld('Brimstone', 3)), ...both('L2', 'R2', ld('TANK-2250L')), ...both('L3', 'R3', ld('ASRAAM')) } },
   ],
 };
@@ -564,7 +566,7 @@ const xf1: AircraftDef = {
     helmet: ['Striker'],
   }),
   presets: [
-    { id: 'stealth', name: '스텔스 제공', description: '무장창에 Meteor 4 발 + ASRAAM 2 발.', modules: {}, stations: { BAY_C: ld('Meteor', 4), ...both('BAY_SL', 'BAY_SR', ld('ASRAAM')) } },
+    { id: 'air', name: '스텔스 제공', description: '무장창에 Meteor 4 발 + ASRAAM 2 발.', modules: {}, stations: { BAY_C: ld('Meteor', 4), ...both('BAY_SL', 'BAY_SR', ld('ASRAAM')) } },
     { id: 'heavy', name: '중무장', description: '외부 파일런에 Meteor 4 발 추가 (스텔스 상실).', modules: {}, stations: { BAY_C: ld('Meteor', 4), ...both('BAY_SL', 'BAY_SR', ld('ASRAAM')), ...both('L1', 'R1', ld('Meteor', 2)) } },
   ],
   unlock: FREE,
@@ -583,7 +585,7 @@ const mirage_f1: AircraftDef = {
   crew: 1,
   dimensions: { length: 15.3, span: 8.4, height: 4.5 },
   mass: { empty: 7400, internalFuel: 3440, maxTakeoff: 16200 },
-  aero: { wingArea: 25, cd0: 0.0126, k: 0.113, clAlpha: 3.5, clMax: 1.5, aoaMaxDeg: 25, waveDragRise: 0.0164 },
+  aero: { wingArea: 25, cd0: 0.0116, k: 0.112, clAlpha: 3.5, clMax: 1.5, aoaMaxDeg: 25, waveDragRise: 0.0151 },
   engine: { name: 'Atar 9K-50', count: 1, dryThrustKN: 49.2, abThrustKN: 70.6, tsfcDry: 98, tsfcAB: 200, spoolTime: 4.5 },
   limits: { gMax: 7.5, gMin: -3, maxMach: 2.2, rollRateDeg: 200, pitchRateDeg: 28, yawRateDeg: 15, cornerSpeed: 240, maxIas: 408 },
   signature: { rcs: 4, ir: 1.0 },
@@ -613,7 +615,7 @@ const mig21: AircraftDef = {
   crew: 1,
   dimensions: { length: 14.5, span: 7.15, height: 4.12 },
   mass: { empty: 5350, internalFuel: 2280, maxTakeoff: 10400 },
-  aero: { wingArea: 23, cd0: 0.0152, k: 0.199, clAlpha: 3.0, clMax: 1.3, aoaMaxDeg: 25, waveDragRise: 0.0198 },
+  aero: { wingArea: 23, cd0: 0.0152, k: 0.214, clAlpha: 3.0, clMax: 1.3, aoaMaxDeg: 25, waveDragRise: 0.0197 },
   engine: { name: 'R-25-300', count: 1, dryThrustKN: 40.2, abThrustKN: 69.6, tsfcDry: 95, tsfcAB: 220, spoolTime: 4.0 },
   limits: { gMax: 8.5, gMin: -3, maxMach: 2.05, rollRateDeg: 180, pitchRateDeg: 25, yawRateDeg: 12, cornerSpeed: 260, maxIas: 361 },
   signature: { rcs: 3, ir: 0.9 },

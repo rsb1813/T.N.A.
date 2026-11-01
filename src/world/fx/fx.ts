@@ -19,6 +19,7 @@ const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
 const _c = new THREE.Vector3();
 const _q = new THREE.Quaternion();
+const _col = new THREE.Color();
 
 function randDir(out: THREE.Vector3): THREE.Vector3 {
   const u = rnd() * 2 - 1;
@@ -152,19 +153,21 @@ class DamageTrail implements Emitter {
     }
     const fire = this.kind === 'fire';
     const spacing = fire ? 4.5 : 7;
-    const moved = this.last.distanceTo(e.position);
-    this.dist += moved;
+    this.dist += this.last.distanceTo(e.position);
     this.timer += dt;
     const minInterval = fire ? 1 / 30 : 1 / 18;
-    let n = 0;
-    while ((this.dist >= spacing || this.timer >= minInterval) && n < 10) {
-      const f = moved > 1e-3 ? Math.min(1, (this.dist - spacing * 0) / Math.max(moved, 1e-3)) : 0;
-      _a.copy(e.position).lerp(this.last, Math.min(1, Math.max(0, f)) * (n / 10));
+    // puffs spaced along the path travelled this frame (fast aircraft), at least a minimum rate when slow
+    let n = Math.floor(this.dist / spacing);
+    if (n === 0 && this.timer >= minInterval) n = 1;
+    n = Math.min(n, 10);
+    for (let i = 0; i < n; i++) {
+      _a.copy(this.last).lerp(e.position, (i + 1) / n);
       this.emitSmoke(fx, _a, fire);
       if (fire) this.emitFlame(fx, _a);
-      this.dist = Math.max(0, this.dist - spacing);
-      this.timer = Math.max(0, this.timer - minInterval);
-      n++;
+    }
+    if (n > 0) {
+      this.dist %= spacing;
+      this.timer = 0;
     }
     if (fire) fx.sprites.add(e.position, 7 + 3 * rnd(), 2.4, 1.1, 0.3, 0.55);
     this.last.copy(e.position);
@@ -601,7 +604,7 @@ export class FxSystem implements FxService, System {
     }
     const d = this.camDist(pos);
     const s = kind === 'small' ? size * 0.45 : size;
-    this.flashBurst(pos, s, d);
+    this.flashBurst(pos, s);
     if (kind === 'water') {
       this.splash(pos, s, 1);
     } else {
@@ -611,7 +614,7 @@ export class FxSystem implements FxService, System {
       if (kind !== 'small') this.debris(pos, s, kind === 'ground' ? 10 : 8);
       if (kind === 'ground') this.dust(pos, s);
     }
-    this.pulseLight(pos, 6000 * s * s, _c.setRGB(1, 0.72, 0.42), 0.35);
+    this.pulseLight(pos, 6000 * s * s, _col.setRGB(1, 0.72, 0.42), 0.35);
     this.shake(THREE.MathUtils.clamp(s * 0.55 * (1 - d / (650 * s + 250)), 0, 0.85));
   }
 
@@ -662,7 +665,7 @@ export class FxSystem implements FxService, System {
     switch (kind) {
       case 'spark':
         this.sparks(pos, 0.35, 10);
-        this.flashBurst(pos, 0.12, Infinity);
+        this.flashBurst(pos, 0.12);
         break;
       case 'debris':
         this.debris(pos, 0.3, 5);
@@ -692,7 +695,7 @@ export class FxSystem implements FxService, System {
 
   // ---------------------------------------------------------------- recipes
 
-  private flashBurst(pos: THREE.Vector3, s: number, d: number): void {
+  private flashBurst(pos: THREE.Vector3, s: number): void {
     const p = this.addPool.spec;
     p.x = pos.x;
     p.y = pos.y;
@@ -711,7 +714,6 @@ export class FxSystem implements FxService, System {
     p.flicker = false;
     setColor(p, 6, 5.2, 4, 1, 3, 1.6, 0.6, 0);
     this.addPool.emit();
-    if (d < 2500 * s) this.shake(0);
   }
 
   private fireball(pos: THREE.Vector3, s: number, n: number): void {
@@ -975,10 +977,10 @@ export class FxSystem implements FxService, System {
       return;
     }
     this.light.setRGB(0, 0, 0);
-    if (this.hemi) this.light.add(_c.copy(this.hemi.color).multiplyScalar(this.hemi.intensity * 0.42));
+    if (this.hemi) this.light.add(_col.copy(this.hemi.color).multiplyScalar(this.hemi.intensity * 0.42));
     if (this.sun) {
-      const up = Math.max(0.2, this.sun.position.clone().normalize().y);
-      this.light.add(_c.copy(this.sun.color).multiplyScalar(this.sun.intensity * 0.22 * up));
+      const up = Math.max(0.2, _b.copy(this.sun.position).normalize().y);
+      this.light.add(_col.copy(this.sun.color).multiplyScalar(this.sun.intensity * 0.22 * up));
     }
     const m = Math.max(this.light.r, this.light.g, this.light.b);
     if (m > 1.15) this.light.multiplyScalar(1.15 / m);

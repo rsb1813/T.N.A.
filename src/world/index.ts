@@ -11,4 +11,6 @@ export type { BiomeDef, BiomePalette, TreeStyle } from './biomes';
 export { Terrain } from './terrain/terrain';
 export type { TerrainBuildOptions, SurfaceSample, FlattenZone } from './terrain/terrain';
 export { computeSkyState, sunAngles } from './sky';
+export { createFx, FxSystem } from './fx/fx';
+export type { FxStats } from './fx/fx';
 export type { SkyState } from './sky';
