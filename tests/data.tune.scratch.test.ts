@@ -1,36 +1,35 @@
 import { it } from 'vitest';
-import { writeFileSync } from 'node:fs';
-import { WEAPONS } from '../src/data/weapons';
-import { estimateEnvelope } from '../src/data/ballistics';
-import type { WeaponDef } from '../src/data/schema';
-// S: s→NEZ, cd0→Rmax, life fixed;  C: s→NEZ, life→Rmax, cd0 fixed
-type Mode = ['S', number] | ['C', number];
-const T: Record<string,[number,number,Mode]> = {
- 'AIM-120D':[80,25,['S',115]],'AIM-120C-7':[70,20,['S',100]],'AIM-7M':[45,12,['S',75]],'AIM-54C':[150,40,['C',0.22]],'R-77':[65,18,['S',95]],'R-77-1':[75,22,['S',105]],
- 'R-27ER':[70,20,['S',100]],'R-27ET':[60,15,['S',90]],'R-33S':[140,35,['C',0.22]],'R-37':[180,45,['C',0.3]],'Skyflash':[40,10,['S',70]],'R530':[25,7,['S',50]],
- 'AIM-9X':[20,8,['C',0.9]],'AIM-9M':[14,5,['C',1.0]],'R-73M':[25,9,['C',0.95]],'ASRAAM':[25,10,['C',0.85]],'IRIS-T':[25,10,['C',0.9]],'R-60M':[8,3,['C',1.0]],'R-13M':[10,3,['C',1.1]],'Magic 2':[15,5,['C',1.0]],'Meteor':[110,55,['C',0.6]] };
-const only = process.env.ONLY?.split(',');
-const ISP: Record<string, number> = { low: 235, medium: 245, high: 255 };
-function mk(base: WeaponDef, s: number, cd0: number, life: number): WeaponDef {
-  const d = structuredClone(base); const m = d.motor!;
-  if (m.ramjet) m.sustainThrustN *= s; else { m.boostThrustN *= s; m.sustainThrustN *= s;
-    m.propellantKg = Math.round((m.boostSec*m.boostThrustN + m.sustainSec*m.sustainThrustN)/(ISP[m.smoke]*9.80665)*10)/10; }
-  d.body!.cd0 = cd0; d.guidance!.maxTimeSec = life; return d;
-}
-it('tune', () => {
-  const rows: Record<string, unknown>[] = []; const out: Record<string, unknown> = {};
-  for (const [id,[rmax,nez,[mode,p]]] of Object.entries(T)) {
-    if (only && !only.includes(id)) continue;
-    const base = WEAPONS[id]; let best: any = null;
-    let slo = Number(process.env.SLO ?? 0.15), shi = Number(process.env.SHI ?? 3.5);
-    for (let i=0;i<13;i++){ const s=(slo+shi)/2;
-      if (mode==='S') { let clo=0.05, chi=4; for (let j=0;j<16;j++){ const c=(clo+chi)/2; if (estimateEnvelope(mk(base,s,c,p)).rMaxKm>rmax) clo=c; else chi=c; } const d=mk(base,s,clo,p); best={s,c:clo,t:p,d,e:estimateEnvelope(d)}; }
-      else { let tlo=3, thi=Number(process.env.TMAX ?? 240); for (let j=0;j<14;j++){ const t=(tlo+thi)/2; if (estimateEnvelope(mk(base,s,p,t)).rMaxKm>rmax) thi=t; else tlo=t; } const d=mk(base,s,p,thi); best={s,c:p,t:thi,d,e:estimateEnvelope(d)}; }
-      if (best.e.rNezKm < nez) slo=s; else shi=s; }
-    const m = best.d.motor!; const sl = estimateEnvelope(best.d, { altitudeM: 0 }); const lf = estimateEnvelope(best.d, { loft: true });
-    out[id] = { boostSec: m.boostSec, boostKN: +(m.boostThrustN/1000).toFixed(2), sustainSec: m.sustainSec, sustainKN: +(m.sustainThrustN/1000).toFixed(2), prop: m.propellantKg, cd0: +best.c.toFixed(3), life: Math.ceil(best.t) };
-    rows.push({ id, mode, s:+best.s.toFixed(2), cd0:+best.c.toFixed(3), life:+best.t.toFixed(1), boost:`${m.boostSec}s ${(m.boostThrustN/1000).toFixed(1)}kN`, sust:`${m.sustainSec}s ${(m.sustainThrustN/1000).toFixed(2)}kN`, prop:m.propellantKg, frac:+((m.propellantKg??0)/base.massKg).toFixed(2), max:+best.e.rMaxKm.toFixed(1), nez:+best.e.rNezKm.toFixed(1), T:`${rmax}/${nez}`, sl:`${sl.rMaxKm.toFixed(1)}/${sl.rNezKm.toFixed(1)}`, loft: lf.rMaxKm.toFixed(0) });
+import { DB } from '../src/data/db';
+import { computeStats, emptyLoadout } from '../src/data/loadout';
+import { maxLevelMach, sustainedTurn } from '../src/data/performance';
+import type { DerivedStats } from '../src/data/schema';
+declare const process: { env: Record<string, string | undefined> };
+// id: [top Mach @11km (AB), turn deg/s @5km M0.8, wdr/cd0 ratio]
+const T: Record<string, [number, number, number]> = {
+  f15ex: [2.5, 14.5, 1.1], f22d: [2.32, 18.0, 0.45], fa18i: [1.8, 14.5, 1.4], f16p: [2.0, 17.5, 1.4], f14ex: [2.34, 13.2, 1.1],
+  su27s: [2.25, 15.5, 1.3], su30mkk: [2.0, 14.5, 1.6], j11: [2.25, 15.5, 1.3], su35s: [2.25, 17.5, 1.3], mig29s: [2.25, 16.0, 1.2],
+  mig31bm: [2.83, 11.9, 1.0], su47: [2.2, 16.5, 1.2], tu22m3: [1.88, 0, 1.5], a50: [0.75, 0, 0], typhoon: [2.05, 16.5, 0.35],
+  tornado_f3: [2.2, 12.3, 1.2], tornado_ids: [2.1, 11.5, 1.4], su27_imperial: [2.25, 15.5, 1.3], xf1: [2.05, 16.5, 0.35], mirage_f1: [2.2, 13.0, 1.3], mig21: [2.05, 12.5, 1.3],
+};
+it('tune aero', () => {
+  const rows: any[] = []; const out: Record<string, any> = {};
+  for (const [id, [top, turn, r]] of Object.entries(T)) {
+    if (process.env.ONLY && !process.env.ONLY.split(',').includes(id)) continue;
+    const def = DB.aircraft[id]; const sw = def.variableSweep;
+    const base = computeStats(emptyLoadout(id));
+    const mk = (cd0: number, k: number): DerivedStats => ({ ...base, cd0: cd0 + (base.cd0 - def.aero.cd0), waveDragRise: r * cd0, k: k * (base.k / def.aero.k) });
+    const opts = { variableSweep: sw, fuelFraction: 0.5 };
+    let cd0 = def.aero.cd0, k = def.aero.k;
+    for (let it = 0; it < 12; it++) {
+      let lo = 0.004, hi = 0.09;
+      for (let i = 0; i < 40; i++) { const c = (lo + hi) / 2; const ok = id === 'a50' ? maxLevelMach(mk(c, k), 11000, false, opts) > top : maxLevelMach(mk(c, k), 11000, true, opts) > top; if (ok) lo = c; else hi = c; }
+      cd0 = lo;
+      if (turn > 0) { let klo = 0.02, khi = 0.6; for (let i = 0; i < 40; i++) { const kk = (klo + khi) / 2; if (sustainedTurn(mk(cd0, kk), 5000, 0.8, opts).rateDeg > turn) klo = kk; else khi = kk; } k = Math.min((klo + khi) / 2, 0.59); }
+    }
+    const s = mk(cd0, k); const st = sustainedTurn(s, 5000, 0.8, opts);
+    out[id] = { cd0: +cd0.toFixed(4), wdr: +(r * cd0).toFixed(4), k: +k.toFixed(3) };
+    rows.push({ id, cd0: +cd0.toFixed(4), wdr: +(r * cd0).toFixed(4), k: +k.toFixed(3), M11: +maxLevelMach(s, 11000, true, opts).toFixed(3), SL: +maxLevelMach(s, 0, true, opts).toFixed(3), SC: +maxLevelMach(s, 11000, false, opts).toFixed(3), turn: +st.rateDeg.toFixed(2), n: +st.loadFactor.toFixed(2), lim: st.limitedBy });
   }
   console.table(rows);
-  writeFileSync('/tmp/claude-0/-home-user-T-N-A-/95815414-c6e1-5123-81b8-ae301b32555e/scratchpad/fit.json', JSON.stringify(out, null, 1));
-}, 3600000);
+  console.log('JSON' + JSON.stringify(out));
+}, 600000);

@@ -822,7 +822,7 @@ const LIST: WeaponDef[] = [
     motor: rocket(2.5, 9, 0, 0, 'low'),
     body: { diameterM: 0.178, lengthM: 1.8, cd0: 0.6, maxG: 15 },
     guidance: { type: 'active_radar', seekerRangeKm: 8, gimbalDeg: 30, offBoresightDeg: 30, loal: true, pitbullKm: 8, navConstant: 3.5, ccm: 0.8 },
-    warhead: { massKg: 6.3, blastRadiusM: 4, damage: 450 },
+    warhead: { massKg: 6.3, blastRadiusM: 4, damage: 900 },
     envelope: { rMinKm: 0.5, rMaxKm: 12, rNezKm: 8 },
   },
   tank('TANK-1000L', '1,000 L 연료탱크', 110, 800, 0.15, 0.6, ['typhoon', 'xf1'], PAX),

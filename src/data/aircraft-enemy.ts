@@ -109,7 +109,7 @@ const j11: AircraftDef = {
   name: 'J-11A Flanker',
   description: '중국 면허생산 Su-27SK. 개량 레이더로 R-77 운용 능력이 낫다.',
   mass: { empty: 16500, internalFuel: 9400, maxTakeoff: 33000 },
-  aero: { ...su27s.aero, k: 0.128 },
+  aero: { wingArea: 62, cd0: 0.0171, k: 0.128, clAlpha: 3.5, clMax: 1.6, aoaMaxDeg: 30, waveDragRise: 0.0222 },
   stations: flanker10(),
   modules: moduleTable({ radar: ['N001VE'], rwr: ['SPO-15LM'], ...FLANKER_MODULES }),
   presets: [

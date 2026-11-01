@@ -888,7 +888,6 @@ class Aircraft:
                         ctrl.append((c["name"], 0.0, c["f"] - c["gap"] / 2))
             return [(None, round(f0, 6), round(f1, 6))] + [(n, round(a_, 6), round(b_, 6)) for n, a_, b_ in ctrl]
 
-        prev_b = None
         for a, b in zip(S[:-1], S[1:]):
             if b - a < 1e-5:
                 continue
@@ -906,7 +905,6 @@ class Aircraft:
                         continue
                     finished.append((key, runs.pop(key)))
                 runs[key] = [(a, ka), (b, kb)]
-            prev_b = b
         finished += list(runs.items())
 
         cut_meta = {}
@@ -1392,10 +1390,7 @@ class Aircraft:
                 print(f"[aero] TNA_POSE: '{name}' 없음")
                 continue
             i = "xyz".index(axis.lower())
-            obj.rotation_mode = "XYZ"
-            r = list(obj.rotation_euler)
             obj.matrix_basis = obj.matrix_basis @ Matrix.Rotation(math.radians(float(deg)), 4, "XYZ"[i])
-            del r
         if os.environ.get("TNA_HIDE_OPT"):
             for name, obj in list(self.objects.items()):
                 if name.startswith("opt_"):

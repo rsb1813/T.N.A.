@@ -49,7 +49,7 @@ export function computeTapeTicks(
   const k0 = Math.ceil(lo / minorStep - 1e-9);
   const k1 = Math.floor(hi / minorStep + 1e-9);
   for (let k = k0; k <= k1; k++) {
-    const v = k * minorStep;
+    const v = k * minorStep + 0; // -0 → 0
     buf.push(v, (v - value) / halfSpan, isMajor(k, ratio));
   }
   return buf.count;
