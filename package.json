@@ -3,12 +3,22 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "preview": "node tools/preview.mjs",
+    "shot": "node tools/shot.mjs",
+    "models": "bash tools/blender/build_all.sh",
     "validate": "gltf-transform validate",
     "optimize": "gltf-transform optimize"
   },
   "devDependencies": {
     "@gltf-transform/cli": "^4.5.1",
-    "three": "^0.186.1"
+    "@types/three": "^0.186.0",
+    "three": "^0.186.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   }
 }
