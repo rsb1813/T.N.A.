@@ -141,6 +141,18 @@ core ← data ← (flight, combat, world, audio) ← ai ← campaign ← ui ← 
 - 폴리곤 예산 (삼각형): 플레이어 기체 ≤ 20k, 적 기체 ≤ 10k, 무장 ≤ 800, 지상유닛 ≤ 4k, 건물 ≤ 2k, 함정 ≤ 15k.
 - 검증: `npx gltf-transform validate` 오류 0, `tools/preview.mjs` 4면 렌더로 실루엣 확인.
 
+### 데이터 id 목록 (data / campaign / ai 가 공유)
+
+- 플레이어 기체 `AircraftDef.id`: `f15ex`, `f22d`, `fa18i`, `f16p`, `f14ex`
+- 적 기체 `AircraftDef.id` (→ 모델):
+  - 바르샤바: `su27s`(flanker), `su30mkk`(flanker, 중국), `j11`(flanker, 중국), `su35s`(flanker+canards), `mig29s`(mig29), `mig31bm`(mig31), `su47`(su47), `tu22m3`(tu22m3), `a50`(a50)
+  - 팍스: `typhoon`(typhoon), `tornado_f3`(tornado), `tornado_ids`(tornado), `su27_imperial`(flanker, 러시아 제국), `xf1`(pax_x1)
+  - WON: `mirage_f1`(mirage_f1), `mig21`(mig21)
+- 지상/해상 유닛·건물 `UnitDef.id` = 아래 모델 id 와 **동일**.
+- 무장 `WeaponDef.id` = 실제 제식명 (예: `AIM-120D`, `AIM-9X`, `GBU-31`, `R-77`, `Meteor`, `5V55R`, `M61A2`).
+- 미션 id: `m00`(튜토리얼), `m01` ~ `m20`.
+- 공력 공식: `src/core/aero.ts` (추력 감률, 조파항력, 양력/항력 계수, 연료 유량). 비행모델과 데이터 보정이 반드시 이 식을 쓴다.
+
 ### 모델 id 목록 (data 의 `model` 필드와 일치시킬 것)
 
 - 플레이어 기체: `f15ex`, `f22d`, `fa18i`, `f16p`, `f14ex`
