@@ -977,13 +977,13 @@ export class FxSystem implements FxService, System {
       return;
     }
     this.light.setRGB(0, 0, 0);
-    if (this.hemi) this.light.add(_col.copy(this.hemi.color).multiplyScalar(this.hemi.intensity * 0.42));
+    if (this.hemi) this.light.add(_col.copy(this.hemi.color).multiplyScalar(this.hemi.intensity * 0.6));
     if (this.sun) {
-      const up = Math.max(0.2, _b.copy(this.sun.position).normalize().y);
-      this.light.add(_col.copy(this.sun.color).multiplyScalar(this.sun.intensity * 0.22 * up));
+      const up = Math.max(0.3, _b.copy(this.sun.position).normalize().y);
+      this.light.add(_col.copy(this.sun.color).multiplyScalar(this.sun.intensity * 0.36 * up));
     }
     const m = Math.max(this.light.r, this.light.g, this.light.b);
-    if (m > 1.15) this.light.multiplyScalar(1.15 / m);
+    if (m > 1.35) this.light.multiplyScalar(1.35 / m);
   }
 
   update(dt: number, sim: Sim): void {

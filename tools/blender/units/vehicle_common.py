@@ -570,7 +570,7 @@ def maz543(u, length=11.7, deck_z=1.95, cab_len=2.6, rear_overhang=None, wheel_s
         mid = (ga + gb) / 2
         ang = math.atan2(gb.y - ga.y, gb.z - ga.z)
         b.box((cab_w - 0.18, 0.04, (gb - ga).length - 0.08), (cx, mid.y + 0.02, mid.z),
-              "glass", rot=Matrix.Rotation(ang, 3, "X") @ Matrix.Identity(3) if False else _rx(-ang))
+              "glass", rot=_rx(-ang))
         xs = cx + sx * (cab_w / 2 + 0.005)
         b.box((0.03, 1.0, 0.55), (xs, y1 - 1.05, 2.45), "glass")
         b.box((0.03, 0.55, 0.85), (xs, y0 + 0.55, 2.10), "paint_dark")  # 문 윤곽

@@ -133,7 +133,8 @@ class Mover extends Entity {
     if (this.drag > 0) this.velocity.multiplyScalar(Math.exp(-this.drag * dt));
     this.position.addScaledVector(this.velocity, dt);
     if (this.velocity.lengthSq() > 1) {
-      _m4.lookAt(_zero, _dir.copy(this.velocity).negate(), _up);
+      // Matrix4.lookAt puts +Z along (eye - target): target = velocity gives nose (-Z) along velocity
+      _m4.lookAt(_zero, _dir.copy(this.velocity), _up);
       this.quaternion.setFromRotationMatrix(_m4);
     }
     this.burnTime -= dt;
@@ -346,6 +347,8 @@ async function runFx(): Promise<void> {
   env.prewarm(cam.position);
   flashEl.style.background = `#${fx.flashColor.getHexString()}`;
   flashEl.style.opacity = String(fx.flash);
+  // freeze the simulation for the capture frames (systems still run with dt = 0)
+  game.paused = true;
   let now = performance.now();
   const times: number[] = [];
   for (let i = 0; i < 2; i++) {
