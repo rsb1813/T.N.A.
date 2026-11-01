@@ -662,6 +662,18 @@ class Building:
         self.b = Builder(sharp_deg=40.0)
         self.empties = []
 
+    def recenter(self, axes="y"):
+        """바운딩 박스 중심이 원점에 오도록 x/y 로 옮긴다 (바닥 z 는 그대로)."""
+        vs = self.b.bm.verts
+        off = Vector((0.0, 0.0, 0.0))
+        for i, ax in enumerate("xy"):
+            if ax in axes:
+                lo, hi = min(v.co[i] for v in vs), max(v.co[i] for v in vs)
+                off[i] = -(lo + hi) / 2
+        bmesh.ops.translate(self.b.bm, verts=vs, vec=off)
+        self.empties = [(n, Vector(p) + off) for n, p in self.empties]
+        return off
+
     def finish(self):
         obj = self.b.to_object(self.id, self.colors)
         for name, loc in self.empties:

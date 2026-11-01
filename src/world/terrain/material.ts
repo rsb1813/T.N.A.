@@ -46,7 +46,8 @@ float slope = 1.0 - nrm.y;
 float dist = length(wp - cameraPosition);
 float m1 = tnaNoise(wp.xz * 0.00042);
 float m2 = tnaNoise(wp.xz * 0.0029 + 17.0);
-vec3 albedo = vColor.rgb;
+vec3 albedo = vColor.rgb * (0.86 + 0.28 * tnaNoise(wp.xz * 0.0011 + 5.0));
+albedo = mix(albedo, albedo * vec3(1.08, 1.0, 0.82), smoothstep(0.55, 0.8, m2) * 0.6);
 
 // farmland quilt
 if (vSurf.y > 0.004) {
@@ -96,13 +97,13 @@ albedo = mix(albedo, uScorch * (0.8 + 0.4 * m2), vSurf.w);
 // rock on steep slopes
 float rn = (m2 - 0.5) * 0.12 + (tnaNoise(wp.xz * 0.021) - 0.5) * 0.08;
 float rockW = smoothstep(uRockSlope.x + rn, uRockSlope.y + rn, slope);
-float strata = 0.9 + 0.1 * sin(wp.y * 0.09 + m1 * 6.0);
-vec3 rockCol = mix(uRock * 0.76, uRock * 1.05, tnaNoise(wp.xz * 0.011)) * strata;
+float strata = 1.0 + 0.1 * sin(wp.y * 0.09 + m1 * 6.0) * (1.0 - smoothstep(1500.0, 5000.0, dist));
+vec3 rockCol = mix(uRock * 0.74, uRock * 1.06, tnaNoise(vec2(wp.x + wp.z, wp.y * 2.0) * 0.006)) * strata;
 albedo = mix(albedo, rockCol, rockW);
 
 // snow on high, not-too-steep ground
 float sn = (m1 - 0.5) * 320.0 + (m2 - 0.5) * 140.0;
-float snowW = smoothstep(uSnowLine - 60.0, uSnowLine + 140.0, wp.y + sn) * (1.0 - smoothstep(0.42, 0.72, slope));
+float snowW = smoothstep(uSnowLine - 60.0, uSnowLine + 140.0, wp.y + sn) * (1.0 - smoothstep(0.26 + m2 * 0.12, 0.5 + m2 * 0.1, slope));
 albedo = mix(albedo, uSnow, snowW);
 
 // beaches near sea level

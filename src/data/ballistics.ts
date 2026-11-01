@@ -85,6 +85,8 @@ export interface InterceptScenario {
   targetVx: number;
   /** loft 궤도 사용 (생략 시 guidance.loft) */
   loft?: boolean;
+  /** 최소 발사 고각 (deg) — 지상 발사대는 경사/수직 발사 */
+  minLaunchElevationDeg?: number;
   /** 명중 시 필요한 최소 속도 (m/s). 생략 시 정면 max(1.2|Vt|, 1.2a), 이탈 |Vt| + 150·clamp(35/maxG, 0.8, 1.6) */
   minSpeed?: number;
   maxTime?: number;
@@ -120,7 +122,7 @@ export function simulateIntercept(def: WeaponDef, sc: InterceptScenario): Interc
   let y = sc.launchAltM;
   let xt = sc.rangeM;
   const yt = sc.targetAltM;
-  const los0 = Math.atan2(yt - y, xt - x);
+  const los0 = Math.max(Math.atan2(yt - y, xt - x), (sc.minLaunchElevationDeg ?? -90) * (Math.PI / 180));
   let vx = sc.launchSpeed * Math.cos(los0);
   let vy = sc.launchSpeed * Math.sin(los0);
   let t = 0;
@@ -254,5 +256,7 @@ export function referenceLoft(def: WeaponDef): boolean {
 
 /** 지대공 사거리 추정: 지상(해면) 발사, 표적은 targetAltM 에서 targetSpeed 로 정면 접근 */
 export function estimateSurfaceToAirRange(def: WeaponDef, targetAltM: number, targetSpeed = 250): number {
-  return maxLaunchRange(def, { launchAltM: 5, launchSpeed: 30, targetAltM, targetVx: -targetSpeed, minSpeed: targetSpeed * 1.1 }) / 1000;
+  return (
+    maxLaunchRange(def, { launchAltM: 5, launchSpeed: 30, targetAltM, targetVx: -targetSpeed, minSpeed: targetSpeed * 1.1, minLaunchElevationDeg: 35 }) / 1000
+  );
 }

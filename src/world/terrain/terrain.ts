@@ -385,15 +385,22 @@ export class Terrain implements TerrainService {
     return out;
   }
 
+  /** Weight of one flatten zone: 1 inside radius, irregular smooth blend ring outside */
+  private zoneWeight(f: FlattenZone, x: number, z: number): number {
+    const dx = x - f.x;
+    const dz = z - f.z;
+    const d = Math.sqrt(dx * dx + dz * dz);
+    if (d <= f.radius) return 1;
+    if (d >= f.radius + f.blend) return 0;
+    const wobble = 0.55 + 0.45 * (0.5 + 0.5 * this.nSurf.noise(x / 1300 + 3.3, z / 1300 - 8.1));
+    return 1 - sstep(f.radius, f.radius + f.blend * wobble, d);
+  }
+
   /** Smooth union weight of all flatten zones at (x, z) */
   flattenWeight(x: number, z: number): number {
     let w = 0;
     for (const f of this.flattenZones) {
-      const dx = x - f.x;
-      const dz = z - f.z;
-      const d = Math.sqrt(dx * dx + dz * dz);
-      if (d >= f.radius + f.blend) continue;
-      const wi = d <= f.radius ? 1 : 1 - sstep(f.radius, f.radius + f.blend, d);
+      const wi = this.zoneWeight(f, x, z);
       if (wi > w) w = wi;
     }
     return w;
@@ -459,7 +466,7 @@ export class Terrain implements TerrainService {
       const r = Math.max(50, f.radius);
       // earlier zones shape the ground a later zone flattens to
       const target = f.height ?? Math.max(4, this.composeHeight(f.x, f.z, zones, null));
-      zones.push({ x: f.x, z: f.z, radius: r, height: target, blend: Math.max(600, r * 0.6) });
+      zones.push({ x: f.x, z: f.z, radius: r, height: target, blend: Math.max(900, r * 0.9) });
     }
     return zones;
   }
@@ -488,12 +495,8 @@ export class Terrain implements TerrainService {
     }
     if (this.coast) h = this.applyCoast(x, z, h);
     for (const f of zones) {
-      const dx = x - f.x;
-      const dz = z - f.z;
-      const d = Math.sqrt(dx * dx + dz * dz);
-      if (d >= f.radius + f.blend) continue;
-      const w = d <= f.radius ? 1 : 1 - sstep(f.radius, f.radius + f.blend, d);
-      h += (f.height - h) * w;
+      const w = this.zoneWeight(f, x, z);
+      if (w > 0) h += (f.height - h) * w;
     }
     return h;
   }

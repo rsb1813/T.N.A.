@@ -95,4 +95,5 @@ b.box((8.6, 3.0, 0.5), (0, Y_REAR - 1.4, 5.45), "paint", bevel=0.1)
 # 문 위 경고등
 for sx in (-1, 1):
     b.box((0.4, 0.3, 0.4), (sx * 3.2, Y_FRONT + 1.95, H * SO - 0.6), "glow")
+B.recenter("y")  # 앞(문 레일)~뒤(배기구) 중앙을 원점으로
 B.finish()

@@ -1,7 +1,8 @@
 // 비행 모듈 단독 테스트 페이지.
 //   기본: 스크립트 기동(상승 → 롤 → 급선회 → 반대 롤)을 ?t= 초(기본 10) 만큼 고정 스텝으로 돌리고 렌더 → window.__ready
 //   ?model=f16p|f15ex|fa18i|f22d|f14ex  모델/고정 데이터 선택 (src/data 가 있으면 실제 데이터 사용)
-//   ?view=chase|cockpit|target|overview 카메라 시점 (overview = 고정 외부 카메라로 전체 궤적)
+//   ?view=chase|cockpit|target|overview|closeup 카메라 시점 (overview = 전체 궤적, closeup = 조종면 확인용 근접)
+//   ?brake=1                            스크립트 내내 에어브레이크
 //   ?play=1                             직접 조종 (키보드/마우스/게임패드, ?aim=1 이면 마우스 에임)
 import * as THREE from 'three';
 import { preloadModels } from '../src/core/assets';
@@ -215,7 +216,7 @@ class ScriptedController implements AircraftController {
     c.yaw = this.phase.yaw ?? 0;
     c.throttle = this.phase.throttle ?? 0.75;
     c.afterburner = !!this.phase.ab;
-    c.airbrake = false;
+    c.airbrake = params.get('brake') === '1';
   }
 }
 
@@ -346,6 +347,16 @@ async function main(): Promise<void> {
     cam.updateProjectionMatrix();
     ac.object3d.scale.setScalar(Math.max(1, bs.radius / 120));
     trail.material.linewidth = 2;
+  }
+  if (VIEW === 'closeup') {
+    // 왼쪽 뒤 위에서 근접 (조종면/플랩/에어브레이크 확인)
+    const L = ac.def.dimensions.length;
+    const cam = game.camera;
+    cam.position.copy(ac.position).add(_tmp.set(-0.75 * L, 0.35 * L, 0.6 * L).applyQuaternion(ac.quaternion));
+    cam.up.copy(ac.getUp(new THREE.Vector3()));
+    cam.lookAt(ac.position);
+    cam.fov = 45;
+    cam.updateProjectionMatrix();
   }
   game.frame(performance.now());
   hud.textContent = hudText(ac, `${script.phase.label} / ${rig.state} / ${source}`);

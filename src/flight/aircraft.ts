@@ -516,7 +516,7 @@ export class Aircraft extends Entity implements AircraftLike {
     return out;
   }
 
-  /** opt_* 노드: 장착 모듈의 visual.show 에 있는 것만 표시 */
+  /** opt_* 노드: 장착 모듈의 visual.show 에 있는 것만 표시. opt_pylons 는 외부 스테이션에 무장이 있으면 표시 */
   private applyOptionalParts(sim: Sim): void {
     const show = new Set<string>();
     const hide = new Set<string>();
@@ -524,6 +524,8 @@ export class Aircraft extends Entity implements AircraftLike {
       for (const n of m.visual?.show ?? []) show.add(n);
       for (const n of m.visual?.hide ?? []) hide.add(n);
     }
+    const externalLoaded = this.def.stations.some((st) => !st.internal && (this.loadout.stations?.[st.id]?.count ?? 0) > 0);
+    if (externalLoaded) show.add('opt_pylons');
     this.model.traverse((o) => {
       if (o.name.startsWith('opt_')) o.visible = show.has(o.name);
       if (hide.has(o.name)) o.visible = false;

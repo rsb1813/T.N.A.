@@ -36,7 +36,7 @@ const H = 720;
 
 // ---------------------------------------------------------------- 시나리오
 
-const peakPos = polar(-40, 40_000, 0);
+const peakPos = polar(-48, 40_000, 0);
 const terrain = mountainTerrain([{ x: peakPos.x, z: peakPos.z, radius: 8000, height: 5000 }]);
 const sim = createTestSim({ seed: 17, terrain });
 
@@ -90,20 +90,20 @@ function air(role: string, name: string, faction: Faction, bearing: number, rang
   return ac;
 }
 
-const su35 = air('STT 로 우리를 추적', 'Su-35S Flanker-E', 'WARSAW', -20, 120, 9000, 160, { sensors: { radar: SAMPLE_RADAR.pesa } });
-const su27 = air('윙맨이 탐지 → 데이터링크', 'Su-27S Flanker-B', 'WARSAW', -5, 235, 9000, 175);
-const wing = air('아군 (Link 16)', 'F-16P Viper', 'NATO', 0, 130, 9000, 0, { sensors: { radar: { ...SAMPLE_RADAR.aesa, rangeKm: 120 }, datalink: SAMPLE_DATALINK } });
+const su35 = air('STT 로 우리를 추적', 'Su-35S Flanker-E', 'WARSAW', -18, 115, 9000, 162, { sensors: { radar: SAMPLE_RADAR.pesa } });
+const su27 = air('윙맨이 탐지 → 데이터링크', 'Su-27S Flanker-B', 'WARSAW', -9, 222, 9000, 171);
+const wing = air('아군 (Link 16)', 'F-16P Viper', 'NATO', -3, 128, 9000, 0, { sensors: { radar: { ...SAMPLE_RADAR.aesa, rangeKm: 120 }, datalink: SAMPLE_DATALINK } });
 wing.callsign = 'Vanguard 2';
-const xfFar = air('스텔스 (40 km)', 'XF-1 Lampyris', 'PAX', 25, 40, 9000, 205, { rcs: 0.0005 });
+const xfFar = air('스텔스 (35 km)', 'XF-1 Lampyris', 'PAX', 2, 35, 9000, 182, { rcs: 0.0005 });
 const xfNear = air('스텔스 (9 km)', 'XF-1 Lampyris', 'PAX', -35, 9, 9000, 145, { rcs: 0.0005 });
-const jamFar = air('재밍 중 (120 km)', 'Su-30MKK Flanker-G', 'WARSAW', 30, 120, 9000, 210, { sensors: { ew: SAMPLE_EW.strong } });
-const jamNear = air('재밍 중 (70 km, 번스루)', 'Su-30MKK Flanker-G', 'WARSAW', 42, 70, 9000, 222, { sensors: { ew: SAMPLE_EW.strong } });
+const jamFar = air('재밍 중 (120 km)', 'Su-30MKK Flanker-G', 'WARSAW', 27, 120, 9000, 207, { sensors: { ew: SAMPLE_EW.strong } });
+const jamNear = air('재밍 중 (70 km, 번스루)', 'Su-30MKK Flanker-G', 'WARSAW', 50, 72, 9000, 230, { sensors: { ew: SAMPLE_EW.strong } });
 jamFar.avionics.jammerActive = true;
 jamNear.avionics.jammerActive = true;
-const notcher = air('저고도 빔 기동 (노치)', 'MiG-29S Fulcrum-C', 'WARSAW', 10, 50, 400, 100);
-const masked = air('산 뒤 저고도', 'Su-30MKK Flanker-G', 'WARSAW', -40, 60, 800, 140);
+const notcher = air('저고도 빔 기동 (노치)', 'MiG-29S Fulcrum-C', 'WARSAW', 22, 52, 400, 112);
+const masked = air('산 뒤 저고도', 'Su-30MKK Flanker-G', 'WARSAW', -48, 62, 800, 132);
 
-const sa10 = new TestUnit(sim, { faction: 'WARSAW', name: 'SA-10 레이더', position: polar(62, 80_000, 0), tags: ['target'] });
+const sa10 = new TestUnit(sim, { faction: 'WARSAW', name: 'SA-10 레이더', position: polar(78, 95_000, 0), tags: ['target'] });
 sa10.emission = { mode: 'search', rangeM: 150_000, azimuthDeg: 180, lpi: 0, trackedIds: [], label: 'SA-10' };
 actors.push({ e: sa10, role: '미션 표적 · 탐색 레이더 방사' });
 
@@ -232,6 +232,51 @@ function drawBracket(x: number, y: number, r: number, color: string, double = fa
   void k;
   box(r);
   if (double) box(r + 4);
+}
+
+type Rect = [number, number, number, number];
+/** 이미 차지한 영역 (라벨/아이콘) — 뷰마다 초기화 */
+let occupied: Rect[] = [];
+
+function overlapArea(a: Rect, b: Rect): number {
+  const w = Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0]);
+  const h = Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1]);
+  return w > 0 && h > 0 ? w * h : 0;
+}
+
+/** 아이콘(x, y) 주변 후보 위치 중 다른 라벨/아이콘과 가장 덜 겹치고 영역 안인 곳에 라벨을 놓는다 */
+function placeLabel(x: number, y: number, lines: Array<[string, string]>, size: number, clip: Rect): void {
+  ctx.font = font(size);
+  const w = Math.max(...lines.map(([t]) => ctx.measureText(t).width)) + 4;
+  const h = lines.length * (size + 3);
+  const cands: Array<[number, number]> = [
+    [x + 14, y - h / 2],
+    [x - 14 - w, y - h / 2],
+    [x + 12, y + 8],
+    [x + 12, y - h - 8],
+    [x - 12 - w, y + 8],
+    [x - 12 - w, y - h - 8],
+    [x - w / 2, y + 16],
+    [x - w / 2, y - h - 16],
+    [x + 12, y + 8 + h],
+    [x - 12 - w, y + 8 + h],
+  ];
+  let best: Rect | null = null;
+  let bestCost = Infinity;
+  for (const [cx, cy] of cands) {
+    const r: Rect = [cx, cy, w, h];
+    const outside = Math.max(0, clip[0] - cx) + Math.max(0, cx + w - (clip[0] + clip[2])) + Math.max(0, clip[1] + 2 - cy) + Math.max(0, cy + h - (clip[1] + clip[3]));
+    let cost = outside * 1000;
+    for (const o of occupied) cost += overlapArea(r, o);
+    if (cost < bestCost) {
+      bestCost = cost;
+      best = r;
+    }
+    if (cost === 0) break;
+  }
+  const r = best!;
+  occupied.push(r);
+  label(r[0] + 2, r[1], lines, size);
 }
 
 function label(x: number, y: number, lines: Array<[string, string]>, size = 12): void {
@@ -370,6 +415,12 @@ function drawEntitiesWide(): void {
   }
   ctx.setLineDash([]);
 
+  occupied = [[v.cx - 12, v.cy - 12, 24, 24]];
+  for (const { e } of actors) {
+    if (e.kind === 'missile') continue;
+    const [x, y] = toScreen(v, e.position);
+    occupied.push([x - 13, y - 13, 26, 26]);
+  }
   for (const { e, role } of actors) {
     if (e.kind === 'missile') continue;
     const [x, y] = toScreen(v, e.position);
@@ -397,13 +448,12 @@ function drawEntitiesWide(): void {
       const lk = av.lockState(SAMPLE_WEAPONS.aim120d, sim);
       lines.push([`지정 표적 · AIM-120D ${lk.status === 'locked' ? '락 완료' : `락 ${Math.round(lk.progress * 100)}%`}`, COLORS.warn]);
     }
-    const lx = x > 520 ? x - 225 : x + 15;
-    label(lx, y - 10, lines, 11);
+    placeLabel(x, y, lines, 11, v.clip);
   }
 
   // 플레이어
   drawAircraftIcon(v.cx, v.cy, 0, '#ffffff', 8);
-  label(v.cx + 12, v.cy - 6, [['Vanguard 1 (F-15EX)', '#ffffff']], 12);
+  placeLabel(v.cx, v.cy, [['Vanguard 1 (F-15EX)', '#ffffff']], 12, v.clip);
   ctx.restore();
 }
 
@@ -439,7 +489,13 @@ function drawClose(): void {
   ctx.fill();
   ctx.strokeStyle = 'rgba(77,232,255,0.45)';
   ctx.stroke();
-  label(v.cx + 6, v.cy - 7000 * v.s - 16, [['육안 7 km (후방 3 km)', COLORS.visual]], 11);
+  occupied = [[v.cx - 12, v.cy - 12, 24, 24]];
+  for (const { e } of actors) {
+    if (e.position.distanceTo(player.position) > 17_000) continue;
+    const [x, y] = toScreen(v, e.position);
+    occupied.push([x - 10, y - 10, 20, 20]);
+  }
+  placeLabel(v.cx, v.cy - 7000 * v.s, [['육안 7 km (후방 3 km)', COLORS.visual]], 11, v.clip);
 
   // 엔티티
   for (const { e, role } of actors) {
@@ -456,12 +512,12 @@ function drawClose(): void {
         if (threat.timeToImpact !== null) parts.push(`충돌 ${threat.timeToImpact.toFixed(1)} s`);
         lines.push([parts.join(' · '), KIND_COLOR.missile]);
       } else lines.push(['경고 없음', COLORS.undetected]);
-      label(x > v.cx ? x + 10 : x - 190, y - 8, lines, 11);
+      placeLabel(x, y, lines, 11, v.clip);
     } else if (e.kind === 'aircraft') {
       const t = trackFor(e);
       drawAircraftIcon(x, y, headingOfEntity(e), t ? factionColor(e) : COLORS.undetected);
       if (t) drawBracket(x, y, 10, SOURCE_COLOR[t.source]);
-      label(x + 12, y - 8, [[`${shortLabel(e.name)} — ${role}`, factionColor(e)], [t ? `트랙: ${SOURCE_NAME[t.source]}` : '트랙 없음', t ? SOURCE_COLOR[t.source] : COLORS.undetected]], 11);
+      placeLabel(x, y, [[`${shortLabel(e.name)} — ${role}`, factionColor(e)], [t ? `트랙: ${SOURCE_NAME[t.source]}` : '트랙 없음', t ? SOURCE_COLOR[t.source] : COLORS.undetected]], 11, v.clip);
     }
   }
   // 견인 디코이
@@ -593,6 +649,7 @@ const report = {
   })),
   threats: av.threats.map((t) => ({ kind: t.kind, label: t.label, bearing: Math.round(t.bearingDeg), by: t.detectedBy, range: t.rangeM && Math.round(t.rangeM), tti: t.timeToImpact && +t.timeToImpact.toFixed(1) })),
   enemyStt: su35.emission?.mode,
+  jammerTrueBearings: [jamFar, jamNear].map((j) => Math.round(Math.atan2(j.position.x, -j.position.z) * (180 / Math.PI))),
   ids: { su27: su27.id, wing: wing.id, xfNear: xfNear.id, jamNear: jamNear.id, notcher: notcher.id, masked: masked.id, r77: r77.id, r73: r73.id, r73Coast: r73Coast.id },
 };
 (window as unknown as { __report: unknown }).__report = report;

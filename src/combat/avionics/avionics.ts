@@ -54,6 +54,7 @@ import {
   SENSOR_TICK_PLAYER,
   STT_BREAK_SEC,
   COAST,
+  VISUAL_AIR_FRONT_M,
   VISUAL_ID_AIR_M,
   VISUAL_ID_GROUND_M,
   VISUAL_MISSILE_M,
@@ -1073,17 +1074,21 @@ export class AircraftAvionics implements Avionics {
     return c;
   }
 
-  /** 우선순위: 30° 원뿔 안(기수에 가까운 순) → 미션 표적 → 우리를 추적 중인 위협 → 거리 */
+  /**
+   * 우선순위: 30° 원뿔 안(기수에 가까운 순, 단 선택 무장 교전 거리 안의 표적이 먼저) → 미션 표적
+   * → 우리를 추적 중인 위협 → 거리.
+   */
   private rank(c: TrackRecord[]): void {
     const o = this.owner;
     o.getForward(_fwd);
+    const engage = this.engageRangeM();
     for (const r of c) {
       _u.subVectors(r.position, o.position);
       const d = _u.length();
       const off = d > 1e-6 ? Math.acos(clamp(_fwd.dot(_u) / d, -1, 1)) * RAD : 0;
       if (off <= DESIGNATION_CONE_DEG) {
         r.rankGroup = 0;
-        r.rankKey = off;
+        r.rankKey = off + (d > engage ? DESIGNATION_CONE_DEG : 0);
       } else if (r.entity.tags.has('target')) {
         r.rankGroup = 1;
         r.rankKey = d;
@@ -1096,6 +1101,14 @@ export class AircraftAvionics implements Avionics {
       }
     }
     c.sort(compareRank);
+  }
+
+  /** 원뿔 안 우선순위용 교전 거리: 선택 무장 사거리(×1.2), 없으면 레이더 공칭 거리, 그것도 없으면 육안 */
+  private engageRangeM(): number {
+    const w = this.lockWeapon;
+    if (w && lockKindOf(w) !== 'none') return weaponMaxRangeM(w) * RADAR_LOCK_RANGE_FACTOR;
+    const r = this.radarRangeM;
+    return r > 0 ? r : VISUAL_AIR_FRONT_M;
   }
 
   private pickBest(filter: TargetFilter): Entity | null {
