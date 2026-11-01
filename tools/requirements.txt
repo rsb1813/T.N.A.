@@ -1,0 +1,12 @@
+# 3D 에셋 처리용 Python 라이브러리 (tools/setup.sh 가 설치)
+numpy==2.5.3
+scipy==1.18.1
+trimesh==5.2.0
+manifold3d==3.5.4
+pygltflib==1.16.5
+pillow==12.3.0
+opensimplex==0.4.5.1
+matplotlib==3.11.2
+networkx==3.7
+rtree==1.4.1
+shapely==2.2.0

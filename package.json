@@ -1,0 +1,14 @@
+{
+  "name": "tna",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview": "node tools/preview.mjs",
+    "validate": "gltf-transform validate",
+    "optimize": "gltf-transform optimize"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1",
+    "three": "^0.186.1"
+  }
+}
