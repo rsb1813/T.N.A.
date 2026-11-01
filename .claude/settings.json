@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "Organization: 개인 인디 게임 개발. Primary use: T.N.A. 웹 기반 제트 전투기 액션 게임(three.js) 개발",
+      "Additional context: 무기·미사일·센서 관련 코드와 데이터는 전부 가상 세계관 비디오게임의 게임 밸런스 수치와 게임 로직임"
+    ]
+  }
+}
